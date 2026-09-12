@@ -37,16 +37,15 @@ principles:
   - deterministic-quality-gates-when-implemented
 
 current_phase:
-  id: deployment-prep
+  id: live-ci-not-wired
   status: active
   goal: >-
-    All five init-prompt phases have a first pass, and this repository
-    now has a verified deployable artifact: static export (ADR-0003),
-    Dockerfile, and a CI workflow, confirmed end to end via a local
-    docker build/run pass. Not yet live — cleanbrain-me-infra still
-    needs its namespace/Deployment/Service/HTTPRoute manifest, DNS, and
-    a Gateway listener (see docs/infra-required-changes.md), all
-    requiring human cluster-admin action, not CI.
+    https://developer.cleanbrain.me is live in production (namespace,
+    Deployment, Service, HTTPRoute applied and verified 2026-09-13 by
+    the cluster administrator; DNS and the Gateway listener confirmed
+    working). CI's deploy job (SSH -> kubectl set image) is not enabled
+    yet -- a push to main only builds/pushes the image today. See
+    docs/status/current-state.md, "Next" for wiring that up.
 
 context:
   human_entrypoint: README.md
@@ -62,4 +61,4 @@ context:
 delivery:
   implementation_present: true
   cli_present: false
-  automation_present: false
+  automation_present: true
