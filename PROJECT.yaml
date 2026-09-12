@@ -37,12 +37,13 @@ principles:
   - deterministic-quality-gates-when-implemented
 
 current_phase:
-  id: phase-1-foundation
+  id: phase-2-portfolio-core
   status: active
   goal: >-
-    Phase 1 (App Shell: layout, navigation, dark-first theme, common
-    components, routed placeholder pages) is implemented and verified.
-    Next is Phase 2 (Portfolio Core) per docs/status/current-state.md.
+    Phase 2 (Portfolio Core: real content for Homepage, Experience,
+    Projects, Case Studies, Architecture, Resume, Contact) is implemented
+    and verified. Next is Phase 3 (RelayHub Lab Mock) per
+    docs/status/current-state.md.
 
 context:
   human_entrypoint: README.md
