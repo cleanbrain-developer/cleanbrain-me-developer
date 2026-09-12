@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
 import { profile } from "@/content/profile";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Contact",
   description: "How to reach cleanbrain.developer.",
-};
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

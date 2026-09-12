@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
 import { profile } from "@/content/profile";
 import { experienceFocusAreas } from "@/content/experience";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Experience",
   description: "Engineering focus areas and the kind of problems this experience has been applied to.",
-};
+  path: "/experience",
+});
 
 export default function ExperiencePage() {
   return (

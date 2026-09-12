@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Architecture",
   description: "Why these systems are shaped the way they are: event-driven integration, retry/DLQ, idempotency, and observability.",
-};
+  path: "/architecture",
+});
 
 const PRINCIPLES = [
   {

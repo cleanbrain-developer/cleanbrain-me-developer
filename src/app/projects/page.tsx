@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
 import { ProjectCard } from "@/components/project/project-card";
 import { projects } from "@/content/projects";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Projects",
   description: "Projects written as problem, architecture, decisions, failure handling, and result.",
-};
+  path: "/projects",
+});
 
 export default function ProjectsPage() {
   return (

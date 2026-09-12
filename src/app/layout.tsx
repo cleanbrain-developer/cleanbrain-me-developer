@@ -14,13 +14,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://developer.cleanbrain.me";
+const SITE_TITLE = "developer.cleanbrain.me";
+const SITE_DESCRIPTION =
+  "Backend engineer building reliable integrations and observable distributed systems. Explore projects, production case studies, and a live RelayHub engineering lab.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "developer.cleanbrain.me",
-    template: "%s | developer.cleanbrain.me",
+    default: SITE_TITLE,
+    template: `%s | ${SITE_TITLE}`,
   },
-  description:
-    "Backend engineer building reliable integrations and observable distributed systems. Explore projects, production case studies, and a live RelayHub engineering lab.",
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: SITE_TITLE,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

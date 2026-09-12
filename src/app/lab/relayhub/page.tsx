@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { RelayHubLab } from "@/components/relayhub/relayhub-lab";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "RelayHub Live Lab",
   description:
     "Generate a synthetic event and watch it move through ingestion, validation, transformation, delivery, retry, and DLQ/replay.",
-};
+  path: "/lab/relayhub",
+});
 
 export default function RelayHubLabPage() {
   return (

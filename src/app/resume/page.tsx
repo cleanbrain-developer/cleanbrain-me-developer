@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
 import { profile } from "@/content/profile";
 import { experienceFocusAreas } from "@/content/experience";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Resume",
   description: "Structured summary of focus areas, tech stack, and how to get in touch.",
-};
+  path: "/resume",
+});
 
 export default function ResumePage() {
   return (

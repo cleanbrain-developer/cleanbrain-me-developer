@@ -4,7 +4,7 @@ Last updated: 2026-09-13
 
 ## Current phase
 
-Phase 3 (RelayHub Lab Mock) — `/lab/relayhub` is a real, interactive mock of RelayHub's event pipeline (Event Generator, Live Pipeline, Metrics, Recent Events, Event Detail, DLQ/Replay), backed entirely by `MockRelayHubAdapter`. Phase 4 (`HttpRelayHubAdapter` interface readiness) has not started.
+Phase 5 (Quality) — accessibility/SEO hardening and a first automated test suite are in place on top of Phase 1–4's functional site. All five roadmap phases from the original init prompt now have at least a first pass; remaining work is incremental hardening (see Next) rather than a new phase.
 
 ## Completed
 
@@ -28,6 +28,10 @@ Phase 3 (RelayHub Lab Mock) — `/lab/relayhub` is a real, interactive mock of R
 - `replayDlq` models both outcomes named in the design spec (roughly 70% success / 30% still-DLQ on replay, not hardcoded to always succeed) by appending new delivery/target stage entries to the event's existing timeline rather than discarding retry history.
 - Demo-safety constraints from `.ai/constitution/engineering-principles.md` hold structurally, not just by convention: `GenerateEventInput` only accepts the closed `EventType`/`Scenario` unions: there is no code path through which the UI could send an arbitrary URL, header, script, or credential to the adapter.
 - Verified: `npm run lint` and `npm run build` pass. Drove the Lab in a real browser (headless Chromium via Playwright, since `chromium-cli` was unavailable in this environment) through all four scenarios plus a DLQ replay — Normal (all stages succeed), Target 500 (3 retries → DLQ, confirmed via screenshot), Replay from DLQ (observed the ~30% failure branch, handled correctly — event stayed `dlq` with a clear replay-failed message and undiminished retry history), and Validation Error (fails immediately, transformation/delivery/target correctly shown `skipped`, no retries). Also checked at a 390px mobile viewport (single-column stacking, no horizontal page scroll; only the Recent Events table scrolls internally, by design). No console errors in any run.
+- Implemented Phase 4 (`HttpRelayHubAdapter` interface readiness): `src/lib/relayhub/http-adapter.ts` implements `RelayHubAdapter` against a REST contract documented in `docs/decisions/ADR-0002-relayhub-http-adapter-contract.md` (explicitly provisional — no real backend implements it). `src/lib/relayhub/service.ts` now selects between `MockRelayHubAdapter` (default) and `HttpRelayHubAdapter` via `NEXT_PUBLIC_RELAYHUB_ADAPTER`/`NEXT_PUBLIC_RELAYHUB_API_URL`; neither env var is set in production, so behavior is unchanged. Updated `docs/architecture/overview.md`'s "Adapter pattern" section and `docs/product/scope.md`'s open decisions to match.
+- Implemented Phase 5 (Quality) SEO work: `metadataBase`, default OpenGraph/Twitter metadata, and `alternates.canonical` on the root layout (`src/app/layout.tsx`); a `pageMetadata()` helper (`src/lib/seo.ts`) applied to every route's `metadata`/`generateMetadata` export so each page gets its own canonical URL and OpenGraph tags instead of only inheriting the root defaults; a `Person` JSON-LD block on the homepage built from `src/content/profile.ts` (no separately-maintained SEO content). Verified all of this against the actual `next build && next start` production output (not just `next dev`), via `curl` against the rendered HTML — title, meta description, canonical link, OpenGraph tags, and the JSON-LD block are all present with the expected values.
+- Added a first automated test suite (previously zero automated tests): `vitest` with 10 unit tests across `src/lib/relayhub/pipeline.test.ts` (the `toPipelineSlots` status-mapper/formatter) and `src/lib/relayhub/mock-adapter.test.ts` (all four scenarios' state transitions, DLQ-replay eligibility and both its outcomes, and metrics aggregation) — the exact test categories design spec §27 "Unit" calls for. `npm run test` runs them; `vitest.config.ts` maps the `@/*` path alias to match `tsconfig.json`.
+- **Toolchain note**: `vitest@5` and its pulled-in `vite`/`rolldown` require Node's `node:util` `styleText` export (Node ≥21.7/22), which this environment's Node 20.11.1 does not have — attempting it fails at startup with a `SyntaxError`, not just an `engines` warning. Pinned `vitest@^3.2.7` instead (`vite` 5.x under the hood, Node `20.x` fully supported); `npm audit` reports 2 moderate `@vitest/mocker` advisories fixed only by `vitest@5` (a dev-only path-traversal/arbitrary-file-read risk in vitest's own local mock-transform server, not present in the built Next.js app or reachable in CI's non-interactive `vitest run`). `npm install` needs `--legacy-peer-deps` here — a plain `npm install` hits an unrelated npm 10.2.4 arborist bug (`Cannot read properties of null (reading 'edgesOut')`) resolving vitest's peer set, not something in this repository's own dependency graph. Revisit the vitest version pin once this environment (or CI) runs Node ≥22.
 
 ## In progress
 
@@ -35,10 +39,11 @@ Phase 3 (RelayHub Lab Mock) — `/lab/relayhub` is a real, interactive mock of R
 
 ## Next
 
-1. Maintainer review of Phase 3 before Phase 4 starts (stated step-by-step preference) — pending.
-2. Phase 4: `HttpRelayHubAdapter` interface readiness only (no real backend call yet) + env-based adapter selection in `src/lib/relayhub/service.ts`.
-3. Phase 5: accessibility, responsive, and SEO hardening beyond Phase 1's baseline (e.g. per-page OpenGraph/canonical, JSON-LD); automated test suite (currently zero automated tests — all verification so far has been lint/build/manual browser checks, per `docs/product/scope.md`'s "Testing" expectations still being unmet).
-4. After this site is live, add a real (non-`planned`) `developer` entry to `cleanbrain-me-entrance`'s `src/config/services.ts` (tracked in both repositories).
+1. Maintainer review of Phase 4/5 — pending.
+2. Broaden the test suite beyond RelayHub domain logic: at minimum a route-level smoke test (design spec §27's "Integration"/"E2E" categories — Generate Event, Retry → DLQ, DLQ Replay, and a homepage/navigation smoke test — are not yet automated, only manually verified via browser screenshots per phase).
+3. Decide whether to spend effort resolving the `vitest`/Node version mismatch (upgrade this environment's/CI's Node to ≥22 and move to `vitest@5`) versus staying on `vitest@3.2.7` — see "Known constraints".
+4. This repository needs its own CI workflow and `Dockerfile` (neither exists yet) before it can be deployed — that work, plus the corresponding `cleanbrain-me-infra` manifest, is tracked in `docs/infra-required-changes.md` and is a prerequisite for going live, not yet started.
+5. After this site is live, add a real (non-`planned`) `developer` entry to `cleanbrain-me-entrance`'s `src/config/services.ts` (tracked in both repositories).
 
 ## Open decisions
 
@@ -52,6 +57,9 @@ See `docs/product/scope.md`, "Open decisions" (routing depth, `HttpRelayHubAdapt
 - This repository owns application source, Dockerfile, and CI; `cleanbrain-me-infra` owns the production Kubernetes manifest — the two must not duplicate each other's content. Anything that looks like a required infra change is recorded in `docs/infra-required-changes.md`, never implemented here.
 - No real chronological work-history timeline (company names, role titles, dates) exists anywhere on the site, by the maintainer's explicit choice — Experience/Resume are focus-area narratives only. Revisit only if the maintainer explicitly asks for a timeline later.
 - Case studies are intentionally composite/abstracted with no real metrics — do not "fill in" numbers later without the maintainer explicitly providing real, disclosable ones.
+- `HttpRelayHubAdapter`'s REST contract (ADR-0002) is provisional and unimplemented by any real backend — do not treat it as confirmed API design for `relayhub-java` or any other service.
+- No `Dockerfile` or CI workflow exists in this repository yet, and no corresponding manifest exists in `cleanbrain-me-infra` — this site is not deployable to production as-is (see Next).
+- `vitest` is pinned to `^3.2.7`, not latest, due to a real Node 20.11.1 incompatibility in `vitest@5`'s toolchain (see the Phase 4/5 Completed entry above) — do not bump it to `^5` without first confirming the runtime Node version supports it.
 
 ## Exit criteria for this phase
 
@@ -60,3 +68,5 @@ See `docs/product/scope.md`, "Open decisions" (routing depth, `HttpRelayHubAdapt
 - Phase 1 (Foundation) application code exists and builds/lints cleanly, verified in a real browser at desktop and mobile widths. (Met.)
 - Phase 2 (Portfolio Core) real content exists for every P0 route (Homepage, Experience, Projects × 2, Case Studies × 3, Architecture, Resume, Contact), builds/lints cleanly, and was spot-checked in a real browser. (Met.)
 - Phase 3 (RelayHub Lab Mock) is functional end to end — all four scenarios and DLQ replay work, backed by `MockRelayHubAdapter` behind the `RelayHubAdapter` interface, verified in a real browser including a mobile viewport. (Met.)
+- Phase 4 (`HttpRelayHubAdapter` interface readiness) exists behind explicit, off-by-default configuration, with its contract documented in an ADR rather than assumed. (Met.)
+- Phase 5 (Quality) has a first pass: per-page SEO metadata verified against real production output, and a first automated unit-test suite covering the RelayHub domain logic. (Met, though the "broaden test coverage" and "not yet deployable" items above remain open — this is a first pass, not a closed phase.)

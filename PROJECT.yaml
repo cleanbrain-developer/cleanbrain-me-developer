@@ -37,13 +37,15 @@ principles:
   - deterministic-quality-gates-when-implemented
 
 current_phase:
-  id: phase-3-relayhub-lab-mock
+  id: phase-5-quality
   status: active
   goal: >-
-    Phase 3 (RelayHub Lab Mock: MockRelayHubAdapter behind the
-    RelayHubAdapter interface, full interactive Lab UI at /lab/relayhub)
-    is implemented and verified. Next is Phase 4 (HttpRelayHubAdapter
-    interface readiness) per docs/status/current-state.md.
+    All five init-prompt phases have a first pass: Foundation, Portfolio
+    Core, RelayHub Lab Mock, HttpRelayHubAdapter interface readiness
+    (ADR-0002, off by default), and Quality (per-page SEO metadata, a
+    first automated test suite). Remaining work is broadening test
+    coverage and standing up this repository's own Dockerfile/CI before
+    it is deployable — see docs/status/current-state.md, "Next".
 
 context:
   human_entrypoint: README.md

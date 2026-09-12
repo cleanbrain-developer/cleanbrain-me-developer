@@ -2,7 +2,7 @@
 
 ## Architectural style
 
-developer.cleanbrain.me is a Next.js (App Router, TypeScript) application. Server Components are the default; Client Components are used only where interactivity is required (primarily the RelayHub Live Lab). There is no database and no custom backend server — the "backend" behavior visitors interact with (the RelayHub Lab pipeline) is a client-side mock state machine behind an adapter interface, not a real service, until a documented later phase changes that.
+developer.cleanbrain.me is a Next.js (App Router, TypeScript) application. Server Components are the default; Client Components are used only where interactivity is required (primarily the RelayHub Live Lab). There is no database and no custom backend server — the "backend" behavior visitors interact with (the RelayHub Lab pipeline) is a client-side mock state machine behind an adapter interface. `HttpRelayHubAdapter` exists (see ADR-0002) but is not used in production; no real RelayHub demo API is deployed.
 
 ```text
 src/content/*.ts (profile, experience, projects, case studies)
@@ -15,11 +15,11 @@ Presentation components (src/components/**)
 ```text
 RelayHub Lab UI (Client Components)
     ↓
-RelayHubLabService
+relayHubLabService (src/lib/relayhub/service.ts)
     ↓
 RelayHubAdapter (interface)
-    ├─ MockRelayHubAdapter   (V1: in-browser state machine)
-    └─ HttpRelayHubAdapter   (future: calls a real RelayHub demo API)
+    ├─ MockRelayHubAdapter   (active in production today)
+    └─ HttpRelayHubAdapter   (implemented, ADR-0002 — opt-in only, no real API deployed)
 ```
 
 ## Layers
@@ -30,13 +30,13 @@ RelayHubAdapter (interface)
 
 ### Domain (RelayHub Lab)
 
-`src/lib/relayhub/types.ts` (or equivalent) defines `EventExecution`, `EventStageExecution`, `PipelineStatus`, `RelayHubMetrics`, and related types, matching the shapes in the design spec. These types are shared by the adapter interface, the mock implementation, and every Lab component — never redefined ad hoc in a component.
+`src/lib/relayhub/types.ts` defines `EventExecution`, `EventStageExecution`, `PipelineStage`/`StageStatus`, `EventExecutionStatus`, `RelayHubMetrics`, and related types. `src/lib/relayhub/pipeline.ts` adds the presentation-facing `toPipelineSlots` mapping (collapsing multi-attempt retries into one slot per pipeline stage). These types are shared by the adapter interface, both adapter implementations, and every Lab component — never redefined ad hoc in a component.
 
 ### Adapter pattern
 
-`RelayHubAdapter` is the single interface (`generateEvent`, `getRecentEvents`, `getEvent`, `getMetrics`, `replayDlq`) that every Lab UI component depends on. `MockRelayHubAdapter` implements it as an in-memory, scenario-driven state machine (see `docs/product/scope.md` for allowed scenarios); a future `HttpRelayHubAdapter` would implement the same interface against a real API. Which adapter is active is selected by explicit configuration (e.g. an environment variable), never by a component branching on "is this mock or real."
+`RelayHubAdapter` (`src/lib/relayhub/adapter.ts`) is the single interface (`generateEvent`, `getRecentEvents`, `getEvent`, `getMetrics`, `replayDlq`) that every Lab UI component depends on. `MockRelayHubAdapter` (`src/lib/relayhub/mock-adapter.ts`) implements it as an in-memory, scenario-driven state machine (see `docs/product/scope.md` for allowed scenarios); `HttpRelayHubAdapter` (`src/lib/relayhub/http-adapter.ts`) implements the same interface against a real API per the contract in ADR-0002, but is not active in production. Which adapter is active is selected once, in `src/lib/relayhub/service.ts`, by `NEXT_PUBLIC_RELAYHUB_ADAPTER` — never by a component branching on "is this mock or real."
 
-Components must call the adapter through `RelayHubLabService`, not `fetch()` directly — no component should know whether it is talking to a mock or a real backend.
+Components must call the adapter through `relayHubLabService` (the singleton exported by `src/lib/relayhub/service.ts`), not `fetch()` or a concrete adapter class directly — no component should know whether it is talking to a mock or a real backend.
 
 ### Presentation
 

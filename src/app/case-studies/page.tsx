@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
 import { CaseStudyCard } from "@/components/case-study/case-study-card";
 import { caseStudies } from "@/content/case-studies";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Case Studies",
   description: "Abstracted production engineering case studies: investigation, root cause, and lessons learned.",
-};
+  path: "/case-studies",
+});
 
 export default function CaseStudiesPage() {
   return (

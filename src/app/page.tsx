@@ -9,12 +9,27 @@ import { profile } from "@/content/profile";
 import { projects } from "@/content/projects";
 import { caseStudies } from "@/content/case-studies";
 
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: profile.name,
+  jobTitle: profile.role,
+  description: profile.summary,
+  url: "https://developer.cleanbrain.me",
+  sameAs: [profile.links.github],
+  knowsAbout: profile.focusAreas,
+};
+
 export default function Home() {
   const featuredProjects = projects.filter((project) => project.featured);
   const selectedCaseStudies = caseStudies.slice(0, 2);
 
   return (
     <Container>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+      />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <p className="font-mono text-sm text-accent">{profile.role}</p>
