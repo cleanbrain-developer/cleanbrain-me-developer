@@ -37,15 +37,13 @@ principles:
   - deterministic-quality-gates-when-implemented
 
 current_phase:
-  id: live-ci-not-wired
+  id: deployed-ci-driven
   status: active
   goal: >-
-    https://developer.cleanbrain.me is live in production (namespace,
-    Deployment, Service, HTTPRoute applied and verified 2026-09-13 by
-    the cluster administrator; DNS and the Gateway listener confirmed
-    working). CI's deploy job (SSH -> kubectl set image) is not enabled
-    yet -- a push to main only builds/pushes the image today. See
-    docs/status/current-state.md, "Next" for wiring that up.
+    https://developer.cleanbrain.me is live in production with CI-driven
+    deploys verified end to end (2026-09-13). No remaining foundation or
+    deployment gaps; ordinary feature/content work from here. See
+    docs/status/current-state.md, "Next".
 
 context:
   human_entrypoint: README.md
