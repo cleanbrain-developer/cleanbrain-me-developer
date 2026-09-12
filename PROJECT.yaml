@@ -1,0 +1,61 @@
+schema_version: 1
+
+project:
+  name: developer.cleanbrain.me
+  repository: cleanbrain-me-developer
+  abbreviation: developer
+  type: web-application
+  lifecycle: design
+
+purpose:
+  summary: >-
+    A developer profile, engineering portfolio, and live engineering lab for
+    cleanbrain.developer, served at developer.cleanbrain.me. It proves backend
+    and distributed-systems capability by letting a visitor run a synthetic
+    event through a mock event-driven pipeline (RelayHub Live Lab), not only
+    read about it.
+  problem: >-
+    A conventional resume-style portfolio page describes backend and
+    distributed-systems experience in prose that a recruiter or engineer
+    cannot verify in the time they spend on the page. There is no place that
+    lets a visitor directly observe ingestion, validation, retry, DLQ, and
+    replay behavior the way the underlying RelayHub project actually behaves.
+
+supported_agents:
+  initial:
+    - codex
+    - claude-code
+  policy: agent-agnostic-core
+
+principles:
+  - repository-first-context
+  - agent-agnostic-core
+  - thin-agent-adapters
+  - minimal-task-prompts
+  - evidence-before-change
+  - explicit-architecture-decisions
+  - deterministic-quality-gates-when-implemented
+
+current_phase:
+  id: v1-foundation
+  status: active
+  goal: >-
+    Adopt repository-first context (this file, constitution, product,
+    architecture, decisions, working state) before any application code
+    exists, then implement Phase 1 (App Shell) from docs/status/current-state.md.
+
+context:
+  human_entrypoint: README.md
+  agent_entrypoints:
+    codex: AGENTS.md
+    claude_code: CLAUDE.md
+  constitution: .ai/constitution/
+  product: docs/product/
+  architecture: docs/architecture/
+  decisions: docs/decisions/
+  current_state: docs/status/current-state.md
+
+delivery:
+  implementation_present: false
+  cli_present: false
+  automation_present: false

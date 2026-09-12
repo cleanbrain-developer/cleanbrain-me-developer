@@ -1,3 +1,9 @@
+# developer.cleanbrain.me
+
+Developer profile, engineering portfolio, and live engineering lab for cleanbrain.developer — a Next.js (App Router, TypeScript, Tailwind) application deployed at `developer.cleanbrain.me`.
+
+For project purpose, principles, architecture, and current status, start from [`CLAUDE.md`](CLAUDE.md) or [`AGENTS.md`](AGENTS.md), which route to the canonical sources under `PROJECT.yaml`, `.ai/constitution/`, `docs/product/`, `docs/architecture/`, `docs/decisions/`, and `docs/status/current-state.md`. This file does not duplicate that design.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
