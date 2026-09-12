@@ -5,7 +5,7 @@ project:
   repository: cleanbrain-me-developer
   abbreviation: developer
   type: web-application
-  lifecycle: design
+  lifecycle: active
 
 purpose:
   summary: >-
@@ -37,12 +37,12 @@ principles:
   - deterministic-quality-gates-when-implemented
 
 current_phase:
-  id: v1-foundation
+  id: phase-1-foundation
   status: active
   goal: >-
-    Adopt repository-first context (this file, constitution, product,
-    architecture, decisions, working state) before any application code
-    exists, then implement Phase 1 (App Shell) from docs/status/current-state.md.
+    Phase 1 (App Shell: layout, navigation, dark-first theme, common
+    components, routed placeholder pages) is implemented and verified.
+    Next is Phase 2 (Portfolio Core) per docs/status/current-state.md.
 
 context:
   human_entrypoint: README.md
@@ -56,6 +56,6 @@ context:
   current_state: docs/status/current-state.md
 
 delivery:
-  implementation_present: false
+  implementation_present: true
   cli_present: false
   automation_present: false
