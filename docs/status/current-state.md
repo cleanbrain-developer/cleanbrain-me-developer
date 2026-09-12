@@ -4,7 +4,7 @@ Last updated: 2026-09-13
 
 ## Current phase
 
-Phase 2 (Portfolio Core) — real content (profile, experience, projects, case studies, architecture, resume, contact) is implemented and verified. Phase 3 (RelayHub Lab Mock) has not started; `/lab/relayhub` is still the Phase 1 placeholder.
+Phase 3 (RelayHub Lab Mock) — `/lab/relayhub` is a real, interactive mock of RelayHub's event pipeline (Event Generator, Live Pipeline, Metrics, Recent Events, Event Detail, DLQ/Replay), backed entirely by `MockRelayHubAdapter`. Phase 4 (`HttpRelayHubAdapter` interface readiness) has not started.
 
 ## Completed
 
@@ -23,6 +23,11 @@ Phase 2 (Portfolio Core) — real content (profile, experience, projects, case s
 - The three Case Studies are, per the maintainer's explicit choice, composite/abstracted scenarios built from the three topics the original design spec suggested (race condition, external-approval timeout, legacy-batch state) — qualitative only, no fabricated numbers, and each says so explicitly in its own summary.
 - `/contact` and `/resume` display the maintainer's real GitHub (`github.com/cleanbrain-developer`) and email (`cleanbrain.developer@gmail.com`), per the maintainer's explicit confirmation to publish both.
 - Verified: `npm run lint` and `npm run build` pass (17 routes, including 2 SSG project detail pages and 3 SSG case-study detail pages). Checked `/`, `/projects`, `/projects/relayhub`, `/case-studies`, `/case-studies/distributed-delivery-race-condition`, `/architecture`, `/resume`, `/contact`, and `/experience` in a real browser via headless-Chromium screenshots — all render correctly, no console errors observed.
+- Implemented Phase 3 (RelayHub Lab Mock): domain types and the `RelayHubAdapter` interface in `src/lib/relayhub/{types,adapter,scenarios,pipeline}.ts`; `MockRelayHubAdapter` (`src/lib/relayhub/mock-adapter.ts`) as an in-memory, scenario-driven state machine covering all four predefined scenarios (normal; target-500 and timeout, both retrying 3 times before moving to DLQ; validation-error, which fails immediately with no retry); `relayHubLabService` (`src/lib/relayhub/service.ts`) as the single adapter-selection point components depend on, never a concrete adapter or `fetch()` directly.
+- Built the Lab UI under `src/components/relayhub/{event-generator,pipeline,metrics,recent-events,event-detail,dlq}/`, composed by the client-side orchestrator `src/components/relayhub/relayhub-lab.tsx`, which now renders at `/lab/relayhub` in place of the Phase 1 `PlaceholderSection`. The Pipeline view collapses multi-attempt delivery retries into one slot (with an "N attempts" badge) for the top-level view, while the full per-attempt timeline and retry history remain visible in Event Detail. A newly generated event's pipeline is revealed stage-by-stage over ~1.8s using the adapter's own real per-event stage results (not a canned animation) — a previously-generated event selected from Recent Events is shown fully resolved, not re-animated.
+- `replayDlq` models both outcomes named in the design spec (roughly 70% success / 30% still-DLQ on replay, not hardcoded to always succeed) by appending new delivery/target stage entries to the event's existing timeline rather than discarding retry history.
+- Demo-safety constraints from `.ai/constitution/engineering-principles.md` hold structurally, not just by convention: `GenerateEventInput` only accepts the closed `EventType`/`Scenario` unions: there is no code path through which the UI could send an arbitrary URL, header, script, or credential to the adapter.
+- Verified: `npm run lint` and `npm run build` pass. Drove the Lab in a real browser (headless Chromium via Playwright, since `chromium-cli` was unavailable in this environment) through all four scenarios plus a DLQ replay — Normal (all stages succeed), Target 500 (3 retries → DLQ, confirmed via screenshot), Replay from DLQ (observed the ~30% failure branch, handled correctly — event stayed `dlq` with a clear replay-failed message and undiminished retry history), and Validation Error (fails immediately, transformation/delivery/target correctly shown `skipped`, no retries). Also checked at a 390px mobile viewport (single-column stacking, no horizontal page scroll; only the Recent Events table scrolls internally, by design). No console errors in any run.
 
 ## In progress
 
@@ -30,11 +35,10 @@ Phase 2 (Portfolio Core) — real content (profile, experience, projects, case s
 
 ## Next
 
-1. Maintainer review of Phase 2 before Phase 3 starts (stated step-by-step preference) — pending.
-2. Phase 3: RelayHub Lab Mock — `src/lib/relayhub/` types + `MockRelayHubAdapter`, then the Lab UI (Event Generator, Pipeline, Metrics, Recent Events, Event Detail, DLQ/Replay) replacing today's `/lab/relayhub` `PlaceholderSection` stub.
-3. Phase 4: `HttpRelayHubAdapter` interface readiness only (no real backend call yet) + env-based adapter selection.
-4. Phase 5: accessibility, responsive, and SEO hardening beyond Phase 1's baseline (e.g. per-page OpenGraph/canonical, JSON-LD); test suite.
-5. After this site is live, add a real (non-`planned`) `developer` entry to `cleanbrain-me-entrance`'s `src/config/services.ts` (tracked in both repositories).
+1. Maintainer review of Phase 3 before Phase 4 starts (stated step-by-step preference) — pending.
+2. Phase 4: `HttpRelayHubAdapter` interface readiness only (no real backend call yet) + env-based adapter selection in `src/lib/relayhub/service.ts`.
+3. Phase 5: accessibility, responsive, and SEO hardening beyond Phase 1's baseline (e.g. per-page OpenGraph/canonical, JSON-LD); automated test suite (currently zero automated tests — all verification so far has been lint/build/manual browser checks, per `docs/product/scope.md`'s "Testing" expectations still being unmet).
+4. After this site is live, add a real (non-`planned`) `developer` entry to `cleanbrain-me-entrance`'s `src/config/services.ts` (tracked in both repositories).
 
 ## Open decisions
 
@@ -55,3 +59,4 @@ See `docs/product/scope.md`, "Open decisions" (routing depth, `HttpRelayHubAdapt
 - The foundation is committed as a reviewable baseline, with the maintainer's explicit confirmation for repository/remote creation and the first push. (Met.)
 - Phase 1 (Foundation) application code exists and builds/lints cleanly, verified in a real browser at desktop and mobile widths. (Met.)
 - Phase 2 (Portfolio Core) real content exists for every P0 route (Homepage, Experience, Projects × 2, Case Studies × 3, Architecture, Resume, Contact), builds/lints cleanly, and was spot-checked in a real browser. (Met.)
+- Phase 3 (RelayHub Lab Mock) is functional end to end — all four scenarios and DLQ replay work, backed by `MockRelayHubAdapter` behind the `RelayHubAdapter` interface, verified in a real browser including a mobile viewport. (Met.)

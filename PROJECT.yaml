@@ -37,13 +37,13 @@ principles:
   - deterministic-quality-gates-when-implemented
 
 current_phase:
-  id: phase-2-portfolio-core
+  id: phase-3-relayhub-lab-mock
   status: active
   goal: >-
-    Phase 2 (Portfolio Core: real content for Homepage, Experience,
-    Projects, Case Studies, Architecture, Resume, Contact) is implemented
-    and verified. Next is Phase 3 (RelayHub Lab Mock) per
-    docs/status/current-state.md.
+    Phase 3 (RelayHub Lab Mock: MockRelayHubAdapter behind the
+    RelayHubAdapter interface, full interactive Lab UI at /lab/relayhub)
+    is implemented and verified. Next is Phase 4 (HttpRelayHubAdapter
+    interface readiness) per docs/status/current-state.md.
 
 context:
   human_entrypoint: README.md
