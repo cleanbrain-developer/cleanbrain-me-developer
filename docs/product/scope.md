@@ -8,6 +8,7 @@
 - `/lab/relayhub`: Event Generator, Live Pipeline, Metrics (explicitly labeled synthetic/demo), Recent Events, Event Detail, DLQ + Replay — all backed by `MockRelayHubAdapter`.
 - At least one real `/case-studies/[slug]` entry, company/customer information abstracted away.
 - Responsive layout (desktop, tablet, mobile) and keyboard/accessibility support for all of the above.
+- Static export (`output: "export"`) served by `nginx:alpine` — no Node server in production (see ADR-0003).
 
 ## V1 out of scope
 

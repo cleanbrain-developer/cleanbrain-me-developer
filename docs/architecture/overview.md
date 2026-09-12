@@ -48,7 +48,7 @@ None in V1. `english-core-speaking` and `relayhub-java` are referenced only as o
 
 ## Deployment target
 
-The build output is a Next.js production build served by a lightweight Node/container runtime inside the `cleanbrain-me-infra` Kubernetes cluster, under the `cleanbrain-me-developer` namespace convention, sharing the cluster's existing Gateway (`cleanbrain-me-gateway`) rather than provisioning new cluster-level resources. Kubernetes manifests themselves live in `cleanbrain-me-infra`, not in this repository — anything that looks like a required infra change is recorded in `docs/infra-required-changes.md` here, not implemented directly.
+The application is built as a static export (`output: "export"` in `next.config.ts`) and served by `nginx:1.27-alpine` — there is no running Node server in production (see ADR-0003; every route is static or `generateStaticParams`-driven, and the RelayHub Lab is entirely client-side). The image runs inside the `cleanbrain-me-infra` Kubernetes cluster, under the `cleanbrain-me-developer` namespace convention, sharing the cluster's existing Gateway (`cleanbrain-me-gateway`) rather than provisioning new cluster-level resources. Kubernetes manifests themselves live in `cleanbrain-me-infra`, not in this repository — anything that looks like a required infra change is recorded in `docs/infra-required-changes.md` here, not implemented directly.
 
 ## Constraints agents must preserve
 

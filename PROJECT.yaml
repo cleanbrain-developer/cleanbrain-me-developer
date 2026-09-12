@@ -37,15 +37,16 @@ principles:
   - deterministic-quality-gates-when-implemented
 
 current_phase:
-  id: phase-5-quality
+  id: deployment-prep
   status: active
   goal: >-
-    All five init-prompt phases have a first pass: Foundation, Portfolio
-    Core, RelayHub Lab Mock, HttpRelayHubAdapter interface readiness
-    (ADR-0002, off by default), and Quality (per-page SEO metadata, a
-    first automated test suite). Remaining work is broadening test
-    coverage and standing up this repository's own Dockerfile/CI before
-    it is deployable — see docs/status/current-state.md, "Next".
+    All five init-prompt phases have a first pass, and this repository
+    now has a verified deployable artifact: static export (ADR-0003),
+    Dockerfile, and a CI workflow, confirmed end to end via a local
+    docker build/run pass. Not yet live — cleanbrain-me-infra still
+    needs its namespace/Deployment/Service/HTTPRoute manifest, DNS, and
+    a Gateway listener (see docs/infra-required-changes.md), all
+    requiring human cluster-admin action, not CI.
 
 context:
   human_entrypoint: README.md
