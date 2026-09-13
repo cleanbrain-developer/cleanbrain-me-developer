@@ -43,3 +43,17 @@ Rejected: this site is a static export with no server (ADR-0003) by deliberate c
 ### Leave it as an external link only, no embedded data
 
 The simpler and lower-risk option, genuinely considered — it requires no cross-repo change at all. Rejected only because the maintainer explicitly asked for the real data to be shown on `developer.cleanbrain.me` itself, not just linked to; noted here so a future session understands this was a deliberate choice between two reasonable options, not an oversight.
+
+## Update (2026-09-13): the animated Live topology, not just KPI tiles
+
+The first version of this ADR shipped `LiveObservabilityPanel` — KPI tiles and two range-query sparklines, a static-feeling summary. The maintainer's actual ask was for the page to visually grab attention the moment a visitor lands on it, the way `relayhub-java`'s own admin-console **Live** page does (`frontend/src/pages/LivePage.tsx` in that repo: a real-time SSE-driven topology diagram with animated "missile" pulses, impact explosions, and node-hit shake effects). A static dashboard, however accurate, does not read as "live" the instant the page loads.
+
+**Decision, extended:**
+
+- Ported `LivePage.tsx`'s topology animation into this repository as `LiveTopology` (`src/components/relayhub/live-observability/live-topology.tsx`), fed by `src/lib/relayhub/live-topology.ts`. It opens a real cross-origin `EventSource` against `relayhub-java`'s `/api/live/stream` (Server-Sent Events) and renders the same Source → Event → RelayHub → Target diagram, with the same pulse/explosion/shake visual language — recolored to this site's theme tokens, not relayhub-java's.
+- Expanded `relayhub-java`'s `CorsConfigurationSource` (same bean, same origin, still `GET`-only) to also cover `/api/sources/**`, `/api/subscriptions/**`, `/api/dlq/**` (needed to lay out the diagram and show the DLQ auto-replay countdown), and `/api/live/**` (the SSE stream itself).
+- This is a **port that runs natively on this site**, not an `<iframe>` of `relayhub-java`'s page — the alternative considered and rejected above (`X-Frame-Options: DENY`) still applies, and a genuine same-site rebuild is arguably the stronger portfolio demonstration besides.
+- Deliberately narrower than the original: no login-gated demo-generator pause/resume control (this site has no auth and ADR-0004's "read-only, `GET`-only" boundary should stay true even as the visualization grows), and no click-through request/response detail on the activity feed.
+- `LiveObservabilityPanel`'s KPI tiles and sparklines were **not deleted** — renamed/kept as `LiveDashboard`, now a secondary "Aggregate stats" section below `LiveTopology` on the same page. The topology animation is the primary, attention-grabbing view; the dashboard remains for anyone who wants trend/summary numbers rather than watching individual events fly by.
+
+**Additional cost this update accepts:** the topology view depends on more of `relayhub-java`'s surface than before (`/api/sources`, `/api/subscriptions`, `/api/dlq/schedule`, plus the SSE event shape itself), and holds one open `EventSource` connection per visiting tab for as long as the tab is open — a real, if currently small, persistent-connection load on `relayhub-java` that a plain polling dashboard did not create.
