@@ -41,17 +41,14 @@ export default function ContactPage() {
 
       <section className="grid grid-cols-1 gap-10 border-t border-border py-12 pb-20 lg:grid-cols-2">
         <div>
-          <SectionHeading eyebrow="About" title={profile.role} description={profile.summary} />
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {profile.focusAreas.map((area) => (
-              <li
-                key={area}
-                className="rounded-full bg-surface px-2 py-1 font-mono text-xs text-muted"
-              >
-                {area}
-              </li>
-            ))}
-          </ul>
+          <SectionHeading
+            eyebrow="About"
+            title={profile.role}
+            description={`${profile.yearsOfExperience} years across Java/Spring and TypeScript/Node.js/NestJS backend systems.`}
+          />
+          <Link href="/profile" className="mt-4 inline-block text-sm text-accent hover:underline">
+            Full profile &rarr;
+          </Link>
         </div>
         <div>
           <SectionHeading
