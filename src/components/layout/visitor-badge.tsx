@@ -1,28 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchTodayCount, recordVisitOnce } from "@/lib/visitor-counter";
+import { fetchAllTimeCount, fetchTodayCount, recordVisitOnce } from "@/lib/visitor-counter";
 
 export function VisitorBadge() {
-  const [count, setCount] = useState<number | null>(null);
+  const [todayCount, setTodayCount] = useState<number | null>(null);
+  const [allTimeCount, setAllTimeCount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       await recordVisitOnce();
-      const value = await fetchTodayCount();
-      if (!cancelled) setCount(value);
+      const [today, allTime] = await Promise.all([fetchTodayCount(), fetchAllTimeCount()]);
+      if (!cancelled) {
+        setTodayCount(today);
+        setAllTimeCount(allTime);
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  if (count === null) return null;
+  if (todayCount === null && allTimeCount === null) return null;
 
   return (
-    <span className="text-xs text-muted" aria-label="Today's visitor count">
-      Today · {count}
+    <span className="text-xs text-muted" aria-label="Visitor count">
+      {todayCount !== null && <>Today · {todayCount}</>}
+      {todayCount !== null && allTimeCount !== null && " · "}
+      {allTimeCount !== null && <>All · {allTimeCount}</>}
     </span>
   );
 }
