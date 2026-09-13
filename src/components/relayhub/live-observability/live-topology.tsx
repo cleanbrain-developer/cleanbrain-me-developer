@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
+  fetchDlqSchedule,
   fetchTopology,
   openLiveActivityStream,
   type RelayHubDeliverySummary,
@@ -142,7 +143,9 @@ export function LiveTopology() {
   const [targets, setTargets] = useState<RelayHubTarget[]>([]);
   const [subscriptions, setSubscriptions] = useState<RelayHubSubscription[]>([]);
   const [summary, setSummary] = useState<RelayHubDeliverySummary>();
+  const [dlqNextRunAt, setDlqNextRunAt] = useState<number>();
   const [dlqSecondsLeft, setDlqSecondsLeft] = useState<number>();
+  const resyncScheduledRef = useRef(false);
   const [connected, setConnected] = useState(false);
   const [feed, setFeed] = useState<RelayHubLiveEvent[]>([]);
   const [loadError, setLoadError] = useState<string>();
@@ -193,17 +196,30 @@ export function LiveTopology() {
         setTargets(topo.targets);
         setSubscriptions(topo.subscriptions);
         setSummary(topo.summary);
-        setDlqSecondsLeft(Math.max(0, Math.ceil((new Date(topo.dlqSchedule.nextRunAt).getTime() - Date.now()) / 1000)));
+        setDlqNextRunAt(new Date(topo.dlqSchedule.nextRunAt).getTime());
       })
       .catch(() => setLoadError("Couldn't load relayhub-java's topology (sources/targets/subscriptions)."));
   }, []);
 
   useEffect(() => {
     const tick = window.setInterval(() => {
-      setDlqSecondsLeft((prev) => (prev !== undefined ? Math.max(0, prev - 1) : prev));
+      if (dlqNextRunAt === undefined) return;
+      const secondsLeft = Math.max(0, Math.ceil((dlqNextRunAt - Date.now()) / 1000));
+      setDlqSecondsLeft(secondsLeft);
+      if (secondsLeft === 0 && !resyncScheduledRef.current) {
+        resyncScheduledRef.current = true;
+        window.setTimeout(() => {
+          fetchDlqSchedule()
+            .then((schedule) => setDlqNextRunAt(new Date(schedule.nextRunAt).getTime()))
+            .catch(() => {})
+            .finally(() => {
+              resyncScheduledRef.current = false;
+            });
+        }, 1200);
+      }
     }, 1000);
     return () => window.clearInterval(tick);
-  }, []);
+  }, [dlqNextRunAt]);
 
   const sourcePositions = useMemo(() => {
     const positions = layout(sources.length, NODE_X_SOURCE);

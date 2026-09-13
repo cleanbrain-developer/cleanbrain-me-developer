@@ -56,6 +56,10 @@ async function getJson<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+export async function fetchDlqSchedule(): Promise<RelayHubDlqSchedule> {
+  return getJson<RelayHubDlqSchedule>("/api/dlq/schedule");
+}
+
 export async function fetchTopology(): Promise<{
   sources: RelayHubSource[];
   targets: RelayHubTarget[];
