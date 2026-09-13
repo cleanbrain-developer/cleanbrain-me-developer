@@ -3,9 +3,9 @@
 ## V1 in scope (P0)
 
 - App shell, navigation, layout, dark-first theme, common components.
-- Homepage: hero, engineering focus, featured projects, Live Lab preview, selected case studies, architecture/platform snapshot, resume/contact.
+- `/` redirects to `/lab/relayhub` (client-side, per ADR-0003's static-export constraints) — the Live Lab is the front door, not the portfolio narrative. The former homepage content (hero, engineering focus, featured projects, Live Lab preview, selected case studies, architecture/platform snapshot, resume/contact) lives at `/profile` instead, reachable from the header logo.
 - `/projects` and `/projects/relayhub`, `/projects/english-core-speaking` (route and content schema; content can start thin, but no fabricated results).
-- `/lab/relayhub`: Event Generator, Live Pipeline, Metrics (explicitly labeled synthetic/demo), Recent Events, Event Detail, DLQ + Replay — all backed by `MockRelayHubAdapter`.
+- `/lab/relayhub`: Event Generator, Live Pipeline, Metrics (explicitly labeled synthetic/demo), Recent Events, Event Detail, DLQ + Replay — all backed by `MockRelayHubAdapter` — plus a real, live "Beyond the simulation" panel reading `relayhub-java`'s actual production telemetry (see ADR-0004).
 - At least one real `/case-studies/[slug]` entry, company/customer information abstracted away.
 - Responsive layout (desktop, tablet, mobile) and keyboard/accessibility support for all of the above.
 - Static export (`output: "export"`) served by `nginx:alpine` — no Node server in production (see ADR-0003).
@@ -13,7 +13,7 @@
 ## V1 out of scope
 
 - Any Kubernetes, K3s, DNS, TLS/certificate, Gateway, Cloudflare, or CI/CD *infrastructure* change — this repository owns application source, Dockerfile, and CI workflow only. Anything that looks like an infra requirement is recorded in `docs/infra-required-changes.md`, never implemented here directly.
-- A real RelayHub backend call in production — `HttpRelayHubAdapter` is implemented (ADR-0002) but not active; `MockRelayHubAdapter` is the only adapter actually used (see `docs/architecture/overview.md`, "Adapter pattern").
+- `HttpRelayHubAdapter` as the Lab's active adapter — it is implemented (ADR-0002) but not active; `MockRelayHubAdapter` is the only adapter actually used (see `docs/architecture/overview.md`, "Adapter pattern"). This is separate from the real, read-only `relayhub-java` telemetry call added by ADR-0004 — that is intentionally not an adapter and not the interactive Lab's backend.
 - A CMS, a global state-management library, authentication, or a database.
 - Arbitrary URL input, arbitrary header input, arbitrary script/code execution, secret/credential input, or any structure that could enable SSRF from the public Live Lab — see `.ai/constitution/engineering-principles.md`, "Demo safety is non-negotiable".
 - Real company names, real customer data, real order/ticket IDs, real internal system IDs, or any production credential, anywhere in content or code.

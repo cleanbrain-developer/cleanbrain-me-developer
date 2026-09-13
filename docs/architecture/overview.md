@@ -44,7 +44,9 @@ Components must call the adapter through `relayHubLabService` (the singleton exp
 
 ## External integrations
 
-None in V1. `english-core-speaking` and `relayhub-java` are referenced only as outbound links from `/projects` content — this application never calls their APIs, shares sessions, or depends on their runtime availability.
+`english-core-speaking` is referenced only as an outbound link from `/projects` content — this application never calls its API, shares sessions, or depends on its runtime availability.
+
+`relayhub-java` is different: `src/lib/relayhub/live-observability.ts` calls its real, public, read-only endpoints (`/api/deliveries/summary`, `/api/targets`, `/api/metrics/query`, `/actuator/health`) directly from the browser, rendered by `LiveObservabilityPanel` on `/lab/relayhub` (see ADR-0004). This is a real runtime dependency, not a mock — if `relayhub-java` is unavailable, that one panel shows an explicit error/retry state rather than crashing the page, but it is genuinely coupled to that service's uptime and API shape. It is deliberately not routed through `RelayHubAdapter`: that interface is for the interactive Lab's simulated event lifecycle, which this read-only telemetry has no equivalent of.
 
 ## Deployment target
 
