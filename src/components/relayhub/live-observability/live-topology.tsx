@@ -445,35 +445,7 @@ export function LiveTopology() {
               );
             })}
 
-            <rect
-              x={hub.x - 52}
-              y={hub.y - 20}
-              width={104}
-              height={40}
-              rx={10}
-              className="topology-hub"
-            />
-            <text x={hub.x} y={hub.y + 4} textAnchor="middle" className="topology-hub-label">
-              RelayHub
-            </text>
-
             <line x1={hub.x} y1={hub.y + 20} x2={dlqPos.x} y2={dlqPos.y - NODE_HEIGHT / 2} className="topology-edge topology-edge-dlq" />
-            <rect
-              x={dlqPos.x - NODE_WIDTH_DLQ / 2}
-              y={dlqPos.y - NODE_HEIGHT / 2}
-              width={NODE_WIDTH_DLQ}
-              height={NODE_HEIGHT}
-              rx={8}
-              className={`topology-node topology-node-dlq${shakingNodes.has("dlq") ? " topology-node-hit" : ""}`}
-            />
-            <text x={dlqPos.x} y={dlqPos.y + 4} textAnchor="middle" className="topology-label topology-label-dlq">
-              DLQ{summary ? ` (${summary.dead})` : ""}
-            </text>
-            {dlqSecondsLeft !== undefined && (
-              <text x={dlqPos.x} y={dlqPos.y + NODE_HEIGHT / 2 + 14} textAnchor="middle" className="topology-label-dlq-timer">
-                auto-replay in {dlqSecondsLeft}s
-              </text>
-            )}
 
             {renderedPulses.map((p) => {
               const { x, y, angleDeg } = pointOnPath(p, p.progress);
@@ -577,6 +549,41 @@ export function LiveTopology() {
                 </g>
               );
             })}
+
+            {/*
+             * Hub + DLQ nodes render last (on top of pulses) so their labels
+             * stay legible even while a missile is passing directly through
+             * them — pulses fly "through" these waypoints by design, but a
+             * label getting garbled mid-flight reads as a rendering bug.
+             */}
+            <rect
+              x={hub.x - 52}
+              y={hub.y - 20}
+              width={104}
+              height={40}
+              rx={10}
+              className="topology-hub"
+            />
+            <text x={hub.x} y={hub.y + 4} textAnchor="middle" className="topology-hub-label">
+              RelayHub
+            </text>
+
+            <rect
+              x={dlqPos.x - NODE_WIDTH_DLQ / 2}
+              y={dlqPos.y - NODE_HEIGHT / 2}
+              width={NODE_WIDTH_DLQ}
+              height={NODE_HEIGHT}
+              rx={8}
+              className={`topology-node topology-node-dlq${shakingNodes.has("dlq") ? " topology-node-hit" : ""}`}
+            />
+            <text x={dlqPos.x} y={dlqPos.y + 4} textAnchor="middle" className="topology-label topology-label-dlq">
+              DLQ{summary ? ` (${summary.dead})` : ""}
+            </text>
+            {dlqSecondsLeft !== undefined && (
+              <text x={dlqPos.x} y={dlqPos.y + NODE_HEIGHT / 2 + 14} textAnchor="middle" className="topology-label-dlq-timer">
+                auto-replay in {dlqSecondsLeft}s
+              </text>
+            )}
           </svg>
         </div>
       )}

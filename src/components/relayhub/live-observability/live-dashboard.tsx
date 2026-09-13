@@ -125,17 +125,19 @@ export function LiveDashboard() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-lg border border-border bg-background p-4">
+            <div className="flex flex-col rounded-lg border border-border bg-background p-4">
               <p className="text-xs uppercase tracking-wide text-muted">
                 Ingress events / min — last 30 min
               </p>
-              <Sparkline points={ingressSeries} color="#5b8def" />
+              <div className="flex flex-1 items-center">
+                <Sparkline points={ingressSeries} color="#5b8def" />
+              </div>
             </div>
-            <div className="rounded-lg border border-border bg-background p-4">
+            <div className="flex flex-col rounded-lg border border-border bg-background p-4">
               <p className="text-xs uppercase tracking-wide text-muted">
                 Delivery attempts / min by status — last 30 min
               </p>
-              <div className="space-y-2">
+              <div className="flex flex-1 flex-col justify-center gap-2">
                 {data.deliveryAttemptSeries.length > 0 ? (
                   data.deliveryAttemptSeries.map((series) => (
                     <div key={series.label}>

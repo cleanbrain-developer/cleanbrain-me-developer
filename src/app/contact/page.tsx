@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Container } from "@/components/layout/container";
+import { SectionHeading } from "@/components/portfolio/section-heading";
 import { profile } from "@/content/profile";
 import { pageMetadata } from "@/lib/seo";
 
@@ -34,6 +36,43 @@ export default function ContactPage() {
           >
             GitHub
           </a>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-10 border-t border-border py-12 pb-20 lg:grid-cols-2">
+        <div>
+          <SectionHeading eyebrow="About" title={profile.role} description={profile.summary} />
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {profile.focusAreas.map((area) => (
+              <li
+                key={area}
+                className="rounded-full bg-surface px-2 py-1 font-mono text-xs text-muted"
+              >
+                {area}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <SectionHeading
+            eyebrow="More"
+            title="Before you reach out"
+            description="A few places that answer most questions faster than an email round-trip."
+          />
+          <div className="mt-4 flex flex-col gap-3">
+            <Link href="/resume" className="text-sm text-accent hover:underline">
+              Resume — focus areas, tech stack &rarr;
+            </Link>
+            <Link href="/lab" className="text-sm text-accent hover:underline">
+              RelayHub Live Monitoring — real production telemetry &rarr;
+            </Link>
+            <Link href="/case-studies" className="text-sm text-accent hover:underline">
+              Case studies — production incidents, root cause, trade-offs &rarr;
+            </Link>
+            <Link href="/architecture" className="text-sm text-accent hover:underline">
+              Architecture — the engineering principles behind this site &rarr;
+            </Link>
+          </div>
         </div>
       </section>
     </Container>
