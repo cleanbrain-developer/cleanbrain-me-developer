@@ -19,7 +19,7 @@ export default function ResumePage() {
           Resume
         </h1>
         <p className="mt-4 max-w-2xl text-muted">
-          {profile.name} &mdash; {profile.role}, {profile.yearsOfExperience} years of experience.
+          {profile.name} &mdash; {profile.role}, {profile.yearsOfExperience}+ years of experience.
         </p>
         <p className="mt-2 max-w-2xl text-muted">{profile.summary}</p>
       </section>

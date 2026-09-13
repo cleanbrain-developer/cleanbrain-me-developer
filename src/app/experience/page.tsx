@@ -18,7 +18,7 @@ export default function ExperiencePage() {
           Experience
         </h1>
         <p className="mt-4 max-w-2xl text-muted">
-          {profile.yearsOfExperience} years across Java/Spring and TypeScript/Node.js/NestJS
+          {profile.yearsOfExperience}+ years across Java/Spring and TypeScript/Node.js/NestJS
           backend systems. Presented here by focus area rather than as a company-by-company
           timeline — each area links to the Projects or Case Studies where it shows up concretely.
         </p>

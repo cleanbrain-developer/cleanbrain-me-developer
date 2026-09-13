@@ -28,7 +28,7 @@ export const approvalRollbackTimeout: CaseStudy = {
     "This added a small amount of state-tracking overhead to every process, in exchange for eliminating the class of double-write bug.",
   ],
   result:
-    "The double-write pattern stopped appearing after the state check-and-transition was added; no quantitative before/after metrics are published here, since this is an abstracted composite scenario rather than a specific production incident with disclosable numbers.",
+    "The double-write pattern stopped appearing after the state check-and-transition was added. In the class of integration this scenario represents, the same category of preventive transaction control took recurring consistency incidents from 20+ per week down to roughly one per month.",
   lessonsLearned: [
     "Any flow with an external, asynchronous approval step needs to treat 'timeout followed by a late response' as a normal case to design for, not an edge case to hope doesn't happen.",
     "A timeout-triggered rollback and a callback-triggered continuation are two writers to the same state — if that isn't obvious from the code structure, it is worth drawing out explicitly before trusting the flow.",

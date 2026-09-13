@@ -44,7 +44,7 @@ export default function ContactPage() {
           <SectionHeading
             eyebrow="About"
             title={profile.role}
-            description={`${profile.yearsOfExperience} years across Java/Spring and TypeScript/Node.js/NestJS backend systems.`}
+            description={`${profile.yearsOfExperience}+ years across Java/Spring and TypeScript/Node.js/NestJS backend systems.`}
           />
           <Link href="/profile" className="mt-4 inline-block text-sm text-accent hover:underline">
             Full profile &rarr;

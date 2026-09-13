@@ -3,12 +3,14 @@ import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { SectionHeading } from "@/components/portfolio/section-heading";
 import { FocusAreaGrid } from "@/components/portfolio/focus-area-grid";
+import { ImpactStats } from "@/components/portfolio/impact-stats";
 import { ProjectCard } from "@/components/project/project-card";
 import { CaseStudyCard } from "@/components/case-study/case-study-card";
 import { profile } from "@/content/profile";
 import { projects } from "@/content/projects";
 import { caseStudies } from "@/content/case-studies";
 import { experienceFocusAreas } from "@/content/experience";
+import { impactStats } from "@/content/impact";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -64,6 +66,18 @@ export default function ProfilePage() {
           >
             Case Studies
           </Link>
+        </div>
+      </section>
+
+      {/* Impact */}
+      <section className="py-12">
+        <SectionHeading
+          eyebrow="Impact"
+          title="Numbers behind the focus areas"
+          description="Outcomes, not claims — the scale and results this experience has actually been applied at."
+        />
+        <div className="mt-6">
+          <ImpactStats items={impactStats} />
         </div>
       </section>
 

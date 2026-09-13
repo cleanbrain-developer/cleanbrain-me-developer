@@ -17,9 +17,10 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
     title: "Enterprise System Integration & Distributed Data Flows",
     shortLabel: "Enterprise Integration",
     description:
-      "Connecting systems that were not designed to talk to each other, and keeping the resulting data flow understandable, observable, and recoverable when a step fails.",
+      "Connecting systems that were not designed to talk to each other — including enterprise SaaS platforms like Salesforce and SAP S/4HANA Cloud — and keeping the resulting data flow understandable, observable, and recoverable when a step fails.",
     highlights: [
-      "Mapping and transformation between systems with different data models",
+      "Mapping and transformation between systems with different data models, including Salesforce, SAP S/4HANA Cloud, and WMS",
+      "Reduced recurring cross-system transaction-consistency incidents from 20+ per week to roughly one per month through preventive transaction controls",
       "Designing for partial failure: retry, dead-letter handling, and replay rather than best-effort delivery",
       "See RelayHub (Projects) and the Case Studies for concrete examples of this focus area in practice",
     ],
@@ -39,8 +40,11 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
     slug: "authentication-and-identity",
     title: "Authentication & Identity Integration",
     shortLabel: "Auth & Identity Integration",
-    description: "Integrating authentication and identity across services using OAuth2, OIDC, and SAML.",
+    description:
+      "Integrating authentication and identity across services and platforms — IAM, SSO, and account lifecycle using OAuth2, OIDC, and SAML, including Microsoft Azure/Exchange integration via the Microsoft Graph API.",
     highlights: [
+      "Designed and operated a Redis-backed SSO session architecture supporting 200K–300K users through peak authentication load",
+      "Microsoft Azure / Exchange account-lifecycle integration via the Microsoft Graph API",
       "OAuth2/OIDC integration for user-facing services (see English Core Speaking, Projects)",
       "Session and identity boundaries between a frontend, backend API, and third-party identity providers",
     ],
@@ -64,6 +68,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
       "Diagnosing real production incidents — not only reproducing failures locally, but verifying root cause and fix against the actual running system.",
     highlights: [
       "Root-cause analysis for intermittent, timing-dependent, and load-dependent failures",
+      "Eliminated a recurring monthly cloud cost by migrating a statistics-processing workload to on-premises infrastructure",
       "Distinguishing a fix that passes a test from one that is verified against production behavior",
     ],
   },
@@ -72,8 +77,10 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
     title: "AI / LLM API Integration",
     shortLabel: "AI / LLM Integration",
     description:
-      "Integrating external AI/LLM APIs into product backends as one more external dependency to design around — with its own latency, failure, and cost characteristics.",
+      "Integrating external AI/LLM APIs — speech-to-text, translation, text-to-speech, and LLM function calling — into product backends as one more external dependency to design around, with its own latency, failure, and cost characteristics.",
     highlights: [
+      "Built real-time multilingual voice pipelines (STT → translation → TTS) processing 3–4 spoken sentences in under 5 seconds",
+      "Validated real-time voice delivery for 10 concurrent recipients per WebSocket channel",
       "External AI/LLM API integration for a user-facing evaluation feature (see English Core Speaking, Projects)",
     ],
   },

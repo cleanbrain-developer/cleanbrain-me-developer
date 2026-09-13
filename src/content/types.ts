@@ -12,6 +12,12 @@ export interface ExperienceFocusArea {
   highlights: string[];
 }
 
+export interface ImpactStat {
+  value: string;
+  label: string;
+  detail: string;
+}
+
 export interface Profile {
   name: string;
   role: string;
