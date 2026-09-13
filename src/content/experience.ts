@@ -4,6 +4,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
   {
     slug: "backend-api-design",
     title: "Backend API Design & Development",
+    shortLabel: "Backend Engineering",
     description:
       "Designing and building REST APIs and backend architecture across Java/Spring and TypeScript/NestJS services, with an emphasis on making boundaries and contracts explicit before implementation.",
     highlights: [
@@ -14,6 +15,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
   {
     slug: "enterprise-integration",
     title: "Enterprise System Integration & Distributed Data Flows",
+    shortLabel: "Enterprise Integration",
     description:
       "Connecting systems that were not designed to talk to each other, and keeping the resulting data flow understandable, observable, and recoverable when a step fails.",
     highlights: [
@@ -25,6 +27,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
   {
     slug: "transaction-and-data-consistency",
     title: "Transaction & Data Consistency",
+    shortLabel: "Transaction & Data Consistency",
     description:
       "Reasoning about transaction boundaries and consistency guarantees in systems where a single business operation spans multiple services or data stores.",
     highlights: [
@@ -35,6 +38,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
   {
     slug: "authentication-and-identity",
     title: "Authentication & Identity Integration",
+    shortLabel: "Auth & Identity Integration",
     description: "Integrating authentication and identity across services using OAuth2, OIDC, and SAML.",
     highlights: [
       "OAuth2/OIDC integration for user-facing services (see English Core Speaking, Projects)",
@@ -44,6 +48,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
   {
     slug: "batch-async-event-driven",
     title: "Batch, Asynchronous & Event-driven Processing",
+    shortLabel: "Distributed & Event-driven Systems",
     description:
       "Building processing pipelines — batch, asynchronous, and event-driven — that stay correct and debuggable as scale and failure scenarios grow.",
     highlights: [
@@ -54,6 +59,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
   {
     slug: "production-troubleshooting",
     title: "Performance Bottleneck Analysis & Production Troubleshooting",
+    shortLabel: "Production Troubleshooting",
     description:
       "Diagnosing real production incidents — not only reproducing failures locally, but verifying root cause and fix against the actual running system.",
     highlights: [
@@ -64,6 +70,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
   {
     slug: "ai-llm-integration",
     title: "AI / LLM API Integration",
+    shortLabel: "AI / LLM Integration",
     description:
       "Integrating external AI/LLM APIs into product backends as one more external dependency to design around — with its own latency, failure, and cost characteristics.",
     highlights: [

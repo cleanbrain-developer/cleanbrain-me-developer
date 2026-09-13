@@ -7,14 +7,6 @@ export const profile: Profile = {
   tagline: "Building reliable integrations and observable distributed systems.",
   summary:
     "Backend engineer with around 9 years of experience across Java/Spring and TypeScript/Node.js/NestJS backend systems that connect multiple services and operate under real-world constraints. Focused on system behavior, data flow, failure modes, transaction boundaries, and operational constraints rather than treating any one technology stack as the goal.",
-  focusAreas: [
-    "Backend Engineering",
-    "Distributed & Event-driven Systems",
-    "Enterprise Integration",
-    "Production Troubleshooting",
-    "Observability",
-    "Kubernetes Platform Operations",
-  ],
   techStack: [
     {
       label: "Backend",

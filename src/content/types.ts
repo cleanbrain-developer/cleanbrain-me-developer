@@ -6,6 +6,8 @@ export interface TechArea {
 export interface ExperienceFocusArea {
   slug: string;
   title: string;
+  /** Short form of `title`, for compact UI (homepage grid, JSON-LD knowsAbout) that can't fit the full title. */
+  shortLabel: string;
   description: string;
   highlights: string[];
 }
@@ -16,7 +18,6 @@ export interface Profile {
   yearsOfExperience: number;
   tagline: string;
   summary: string;
-  focusAreas: string[];
   techStack: TechArea[];
   links: {
     github: string;

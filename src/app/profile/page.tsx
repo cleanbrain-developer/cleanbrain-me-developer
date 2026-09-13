@@ -8,6 +8,7 @@ import { CaseStudyCard } from "@/components/case-study/case-study-card";
 import { profile } from "@/content/profile";
 import { projects } from "@/content/projects";
 import { caseStudies } from "@/content/case-studies";
+import { experienceFocusAreas } from "@/content/experience";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -24,7 +25,7 @@ const personJsonLd = {
   description: profile.summary,
   url: "https://developer.cleanbrain.me",
   sameAs: [profile.links.github],
-  knowsAbout: profile.focusAreas,
+  knowsAbout: experienceFocusAreas.map((area) => area.shortLabel),
 };
 
 export default function ProfilePage() {
@@ -68,9 +69,14 @@ export default function ProfilePage() {
 
       {/* Engineering Focus */}
       <section className="py-12">
-        <SectionHeading eyebrow="Focus" title="Engineering focus" />
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <SectionHeading eyebrow="Focus" title="Engineering focus" />
+          <Link href="/experience" className="text-sm text-accent hover:underline">
+            See the detail behind each area &rarr;
+          </Link>
+        </div>
         <div className="mt-6">
-          <FocusAreaGrid items={profile.focusAreas} />
+          <FocusAreaGrid items={experienceFocusAreas.map((area) => area.shortLabel)} />
         </div>
       </section>
 

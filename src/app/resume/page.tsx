@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { profile } from "@/content/profile";
 import { experienceFocusAreas } from "@/content/experience";
@@ -24,9 +25,14 @@ export default function ResumePage() {
       </section>
 
       <section className="border-t border-border py-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-accent">
-          Focus areas
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-accent">
+            Focus areas
+          </h2>
+          <Link href="/experience" className="text-sm text-accent hover:underline">
+            Full breakdown &rarr;
+          </Link>
+        </div>
         <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {experienceFocusAreas.map((area) => (
             <li key={area.slug} className="flex items-start gap-2 text-muted">
