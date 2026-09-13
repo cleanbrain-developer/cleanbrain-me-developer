@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 // regardless of this redirect, so link previews and crawlers that read
 // <head> without running JS still see developer.cleanbrain.me's real
 // identity — only the interactive body is skipped for a real browser,
-// which lands on the RelayHub Live Lab instead. The full profile/portfolio
+// which lands on the RelayHub Live Monitoring dashboard instead. The full profile/portfolio
 // narrative that used to live here still exists at /profile.
 export default function Home() {
   redirect("/lab/relayhub");

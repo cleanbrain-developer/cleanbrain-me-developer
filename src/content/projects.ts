@@ -5,7 +5,7 @@ export const projects: Project[] = [
     slug: "relayhub",
     name: "RelayHub",
     summary:
-      "An event-integration platform: events are ingested, validated, transformed, and delivered to downstream targets with retry, dead-letter handling, replay, and metrics — the same behavior this site's Live Lab lets you trigger yourself.",
+      "An event-integration platform: events are ingested, validated, transformed, and delivered to downstream targets with retry, dead-letter handling, replay, and metrics — this site's Live Monitoring page reads its real, live delivery and DLQ data directly.",
     status: "live",
     role: "Sole designer and implementer.",
     problem:
@@ -28,7 +28,7 @@ export const projects: Project[] = [
       "Continuous synthetic traffic from `relayhub-demo-systems` keeps those metrics meaningful even without live production integrations.",
     ],
     result:
-      "Live in production, running continuously against synthetic source/target traffic. The RelayHub Live Lab on this site is backed by the same event/pipeline model this project actually implements.",
+      "Live in production, running continuously against synthetic source/target traffic. This site's Live Monitoring page (`/lab/relayhub`) reads its real delivery, DLQ, and ingress-rate data directly, not a simulation of it.",
     lessonsLearned: [
       "Kafka's KRaft mode needs a complete, consistent environment-variable set to come up cleanly in a container — partial configuration (e.g. only `advertised.listeners`) fails in ways that look unrelated to the actual missing setting.",
       "An admin console is only as useful as the metrics wired into it — visibility has to be designed in from the start, not bolted on after the pipeline works.",

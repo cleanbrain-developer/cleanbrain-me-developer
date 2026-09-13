@@ -2,7 +2,7 @@
 
 ## Architectural style
 
-developer.cleanbrain.me is a Next.js (App Router, TypeScript) application. Server Components are the default; Client Components are used only where interactivity is required (primarily the RelayHub Live Lab). There is no database and no custom backend server — the "backend" behavior visitors interact with (the RelayHub Lab pipeline) is a client-side mock state machine behind an adapter interface. `HttpRelayHubAdapter` exists (see ADR-0002) but is not used in production; no real RelayHub demo API is deployed.
+developer.cleanbrain.me is a Next.js (App Router, TypeScript) application. Server Components are the default; Client Components are used only where interactivity is required (primarily the RelayHub Live Monitoring dashboard). There is no database and no custom backend server, and — since ADR-0005 — no mock/simulation layer either: the dashboard at `/lab/relayhub` reads relayhub-java's real production telemetry directly. The `RelayHubAdapter`/`MockRelayHubAdapter`/`HttpRelayHubAdapter` interfaces from ADR-0002 (Phase 3–4 of the original build) were removed entirely — see ADR-0005 for why.
 
 ```text
 src/content/*.ts (profile, experience, projects, case studies)
@@ -13,13 +13,11 @@ Presentation components (src/components/**)
 ```
 
 ```text
-RelayHub Lab UI (Client Components)
+LiveDashboard (Client Component, src/components/relayhub/live-observability/)
     ↓
-relayHubLabService (src/lib/relayhub/service.ts)
+fetchRelayHubLiveObservability (src/lib/relayhub/live-observability.ts)
     ↓
-RelayHubAdapter (interface)
-    ├─ MockRelayHubAdapter   (active in production today)
-    └─ HttpRelayHubAdapter   (implemented, ADR-0002 — opt-in only, no real API deployed)
+relayhub-java's public REST/Prometheus-proxy endpoints (real, cross-origin)
 ```
 
 ## Layers
@@ -28,35 +26,29 @@ RelayHubAdapter (interface)
 
 `src/content/` holds structured TypeScript modules (`profile.ts`, `experience.ts`, `projects.ts`, `case-studies/*.ts`) that are the single source of portfolio content. Presentation components read from these modules; they never define project or case-study text inline.
 
-### Domain (RelayHub Lab)
+### RelayHub Live Monitoring
 
-`src/lib/relayhub/types.ts` defines `EventExecution`, `EventStageExecution`, `PipelineStage`/`StageStatus`, `EventExecutionStatus`, `RelayHubMetrics`, and related types. `src/lib/relayhub/pipeline.ts` adds the presentation-facing `toPipelineSlots` mapping (collapsing multi-attempt retries into one slot per pipeline stage). These types are shared by the adapter interface, both adapter implementations, and every Lab component — never redefined ad hoc in a component.
-
-### Adapter pattern
-
-`RelayHubAdapter` (`src/lib/relayhub/adapter.ts`) is the single interface (`generateEvent`, `getRecentEvents`, `getEvent`, `getMetrics`, `replayDlq`) that every Lab UI component depends on. `MockRelayHubAdapter` (`src/lib/relayhub/mock-adapter.ts`) implements it as an in-memory, scenario-driven state machine (see `docs/product/scope.md` for allowed scenarios); `HttpRelayHubAdapter` (`src/lib/relayhub/http-adapter.ts`) implements the same interface against a real API per the contract in ADR-0002, but is not active in production. Which adapter is active is selected once, in `src/lib/relayhub/service.ts`, by `NEXT_PUBLIC_RELAYHUB_ADAPTER` — never by a component branching on "is this mock or real."
-
-Components must call the adapter through `relayHubLabService` (the singleton exported by `src/lib/relayhub/service.ts`), not `fetch()` or a concrete adapter class directly — no component should know whether it is talking to a mock or a real backend.
+`src/lib/relayhub/live-observability.ts` is the only RelayHub-related domain module left. It exports `fetchRelayHubLiveObservability()` (calls relayhub-java's real endpoints) and two pure, unit-tested parsing functions — `parseInstantValue`/`parseRangeSeries` — that reshape Prometheus's JSON response shapes into this app's `RelayHubSeries`/`RelayHubLiveSummary`/`RelayHubLiveTarget` types (see `docs/decisions/ADR-0004-live-relayhub-observability.md`). There is no adapter interface and no mock implementation: this is a one-way, read-only view of a real system, not a simulated pipeline with interchangeable backends. `LiveDashboard` (`src/components/relayhub/live-observability/live-dashboard.tsx`) is a Client Component that fetches on mount and every 10 seconds thereafter, rendering KPI tiles and `Sparkline` (`sparkline.tsx`, a small dependency-free inline-SVG line chart — no charting library).
 
 ### Presentation
 
-`src/components/` is organized by feature area (`layout/`, `navigation/`, `portfolio/`, `project/`, `case-study/`, `relayhub/{event-generator,pipeline,metrics,recent-events,event-detail,dlq}/`). The RelayHub Lab is decomposed into small components per the design spec, not one large client component; only the components that need interactivity are Client Components.
+`src/components/` is organized by feature area (`layout/`, `navigation/`, `portfolio/`, `project/`, `case-study/`, `relayhub/live-observability/`). Only components that need real interactivity (polling, client-side refresh) are Client Components.
 
 ## External integrations
 
 `english-core-speaking` is referenced only as an outbound link from `/projects` content — this application never calls its API, shares sessions, or depends on its runtime availability.
 
-`relayhub-java` is different: `src/lib/relayhub/live-observability.ts` calls its real, public, read-only endpoints (`/api/deliveries/summary`, `/api/targets`, `/api/metrics/query`, `/actuator/health`) directly from the browser, rendered by `LiveObservabilityPanel` on `/lab/relayhub` (see ADR-0004). This is a real runtime dependency, not a mock — if `relayhub-java` is unavailable, that one panel shows an explicit error/retry state rather than crashing the page, but it is genuinely coupled to that service's uptime and API shape. It is deliberately not routed through `RelayHubAdapter`: that interface is for the interactive Lab's simulated event lifecycle, which this read-only telemetry has no equivalent of.
+`relayhub-java` is different and load-bearing: `src/lib/relayhub/live-observability.ts` calls its real, public, read-only endpoints (`/api/deliveries/summary`, `/api/targets`, `/api/metrics/query`, `/api/metrics/query_range`) directly from the browser, rendered by `LiveDashboard` on `/lab/relayhub` — now the site's front door (`/` redirects there). This is a real runtime dependency: if `relayhub-java` is unavailable, the dashboard shows an explicit error/retry state rather than crashing the page, but it is genuinely coupled to that service's uptime and exact API/metric-name shape (see ADR-0004's "Costs and risks").
 
 ## Deployment target
 
-The application is built as a static export (`output: "export"` in `next.config.ts`) and served by `nginx:1.27-alpine` — there is no running Node server in production (see ADR-0003; every route is static or `generateStaticParams`-driven, and the RelayHub Lab is entirely client-side). The image runs inside the `cleanbrain-me-infra` Kubernetes cluster, under the `cleanbrain-me-developer` namespace convention, sharing the cluster's existing Gateway (`cleanbrain-me-gateway`) rather than provisioning new cluster-level resources. Kubernetes manifests themselves live in `cleanbrain-me-infra`, not in this repository — anything that looks like a required infra change is recorded in `docs/infra-required-changes.md` here, not implemented directly.
+The application is built as a static export (`output: "export"` in `next.config.ts`) and served by `nginx:1.27-alpine` — there is no running Node server in production (see ADR-0003; every route is static or `generateStaticParams`-driven, and the Live Monitoring dashboard is entirely client-side). The image runs inside the `cleanbrain-me-infra` Kubernetes cluster, under the `cleanbrain-me-developer` namespace convention, sharing the cluster's existing Gateway (`cleanbrain-me-gateway`) rather than provisioning new cluster-level resources. Kubernetes manifests themselves live in `cleanbrain-me-infra`, not in this repository — anything that looks like a required infra change is recorded in `docs/infra-required-changes.md` here, not implemented directly.
 
 ## Constraints agents must preserve
 
 - Content-driven: portfolio content lives in `src/content/`, never hardcoded into a component.
-- Adapter boundary: RelayHub Lab UI depends only on `RelayHubAdapter`; no component calls a network API directly.
-- Demo safety: the public Lab only ever accepts a predefined event type and scenario, and only ever operates on synthetic data (see `.ai/constitution/engineering-principles.md`).
+- No mock/simulation UI: per ADR-0005, do not reintroduce a synthetic "generate an event" affordance on this site. If a demo/simulation need re-emerges, treat it as a new decision requiring its own ADR, not a revival of the deleted Phase 3 code.
+- `relayhub-java` integration stays read-only and narrowly scoped: `LiveDashboard` must never send a request that could mutate `relayhub-java` state, and any new endpoint it reads must be added to that service's CORS allowlist deliberately (see ADR-0004), never assumed to already be covered by `**`.
 - Server Components by default; a Client Component boundary must be justified by real interactivity, not convenience.
 - No global state-management library, no CMS, no database, no auth in V1 (see `docs/product/scope.md`).
 - Target cluster is 2 vCPU / 4 GB RAM / 40 GB disk (per `cleanbrain-me-infra`) — keep the runtime footprint of the served build and its container minimal.

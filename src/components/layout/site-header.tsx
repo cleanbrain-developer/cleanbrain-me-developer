@@ -5,7 +5,7 @@ import { VisitorBadge } from "@/components/layout/visitor-badge";
 const NAV_ITEMS = [
   { href: "/experience", label: "Experience" },
   { href: "/projects", label: "Projects" },
-  { href: "/lab", label: "Live Lab" },
+  { href: "/lab", label: "Live" },
   { href: "/case-studies", label: "Case Studies" },
   { href: "/architecture", label: "Architecture" },
   { href: "/resume", label: "Resume" },

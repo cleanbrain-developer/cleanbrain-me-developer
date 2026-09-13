@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { SectionHeading } from "@/components/portfolio/section-heading";
 import { FocusAreaGrid } from "@/components/portfolio/focus-area-grid";
-import { LiveLabPreview } from "@/components/portfolio/live-lab-preview";
 import { ProjectCard } from "@/components/project/project-card";
 import { CaseStudyCard } from "@/components/case-study/case-study-card";
 import { profile } from "@/content/profile";
@@ -50,7 +49,7 @@ export default function ProfilePage() {
             href="/lab"
             className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:opacity-90"
           >
-            Open RelayHub Lab
+            Open Live Monitoring
           </Link>
           <Link
             href="/projects"
@@ -94,20 +93,27 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Live Engineering Lab Preview */}
+      {/* Live Monitoring */}
       <section className="py-12">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <SectionHeading
-            eyebrow="Live Lab"
-            title="RelayHub live engineering lab"
-            description="Generate a synthetic event and watch it move through ingestion, validation, delivery, retry, and DLQ/replay."
+            eyebrow="Live"
+            title="RelayHub live monitoring"
+            description="Real production telemetry read directly from relayhub-java, refreshed automatically — not a simulation."
           />
           <Link href="/lab" className="text-sm text-accent hover:underline">
-            Open the Lab &rarr;
+            Open Live Monitoring &rarr;
           </Link>
         </div>
-        <div className="mt-6">
-          <LiveLabPreview />
+        <div className="mt-6 rounded-lg border border-border bg-surface p-5">
+          <p className="text-sm text-muted">
+            Delivery outcomes, DLQ depth, and live ingress rate from the actual deployed service —
+            see it update in real time on the{" "}
+            <Link href="/lab" className="text-accent hover:underline">
+              Live Monitoring dashboard
+            </Link>
+            .
+          </p>
         </div>
       </section>
 

@@ -9,11 +9,13 @@ project:
 
 purpose:
   summary: >-
-    A developer profile, engineering portfolio, and live engineering lab for
-    cleanbrain.developer, served at developer.cleanbrain.me. It proves backend
-    and distributed-systems capability by letting a visitor run a synthetic
-    event through a mock event-driven pipeline (RelayHub Live Lab), not only
-    read about it.
+    A developer profile, engineering portfolio, and live production monitoring
+    dashboard for cleanbrain.developer, served at developer.cleanbrain.me. It
+    proves backend and distributed-systems capability by showing real, live
+    telemetry from relayhub-java (a real event-driven pipeline this same
+    developer built and operates), not only writing about it. The site's
+    original interactive mock simulation (Phase 3-4) was removed once real
+    data became available and the mock was confirmed unused — see ADR-0005.
   problem: >-
     A conventional resume-style portfolio page describes backend and
     distributed-systems experience in prose that a recruiter or engineer
@@ -41,9 +43,11 @@ current_phase:
   status: active
   goal: >-
     https://developer.cleanbrain.me is live in production with CI-driven
-    deploys verified end to end (2026-09-13). No remaining foundation or
-    deployment gaps; ordinary feature/content work from here. See
-    docs/status/current-state.md, "Next".
+    deploys verified end to end (2026-09-13), and / now redirects to a real
+    Live Monitoring dashboard (relayhub-java's actual telemetry, auto-
+    refreshing) after the Mock RelayHub Lab was removed as confirmed unused
+    (ADR-0005). No remaining foundation or deployment gaps; ordinary
+    feature/content work from here. See docs/status/current-state.md, "Next".
 
 context:
   human_entrypoint: README.md

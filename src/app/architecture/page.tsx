@@ -26,8 +26,8 @@ const PRINCIPLES = [
     body: "RelayHub's admin console is backed by Prometheus metrics fed by continuous synthetic traffic (relayhub-demo-systems), so throughput, latency, and failure rate are visible even without live production integrations.",
   },
   {
-    title: "A clean adapter boundary between UI and backend",
-    body: "This site's own RelayHub Live Lab depends only on a RelayHubAdapter interface, never on a concrete network call — the same principle applied to the frontend layer that RelayHub applies to backend integration: a stable boundary that the implementation behind it can change without breaking callers.",
+    title: "Evidence over simulation, once evidence is actually available",
+    body: "This site's RelayHub Live Monitoring page used to be a client-side mock of RelayHub's pipeline; it now reads relayhub-java's real, public delivery/DLQ/metrics endpoints directly, scoped by CORS to exactly this origin. A simulation is worth building only until the real thing can be shown safely — once it can, showing the real thing is strictly more convincing.",
   },
   {
     title: "Batch vs. real-time is a deliberate choice, not a default",
