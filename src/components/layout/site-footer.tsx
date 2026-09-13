@@ -1,4 +1,5 @@
 import { Container } from "@/components/layout/container";
+import { VisitorBadge } from "@/components/layout/visitor-badge";
 
 const FOOTER_LINKS = [
   { href: "https://github.com/cleanbrain-developer", label: "GitHub" },
@@ -11,7 +12,10 @@ export function SiteFooter() {
     <footer className="border-t border-border">
       <Container>
         <div className="flex flex-wrap items-center justify-between gap-4 py-8 text-sm text-muted">
-          <p>&copy; {new Date().getFullYear()} cleanbrain.developer</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p>&copy; {new Date().getFullYear()} cleanbrain.developer</p>
+            <VisitorBadge />
+          </div>
           <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5 gap-y-2">
             {FOOTER_LINKS.map((link) => (
               <a

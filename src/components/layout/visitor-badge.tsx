@@ -25,10 +25,14 @@ export function VisitorBadge() {
   if (todayCount === null && allTimeCount === null) return null;
 
   return (
-    <span className="text-xs text-muted" aria-label="Visitor count">
-      {todayCount !== null && <>Today · {todayCount}</>}
+    <span
+      className="font-mono text-[11px] text-muted/70"
+      title="Visitor count: today · all-time"
+      aria-label="Visitor count"
+    >
+      {todayCount !== null && <>{todayCount} today</>}
       {todayCount !== null && allTimeCount !== null && " · "}
-      {allTimeCount !== null && <>All · {allTimeCount}</>}
+      {allTimeCount !== null && <>{allTimeCount} all-time</>}
     </span>
   );
 }

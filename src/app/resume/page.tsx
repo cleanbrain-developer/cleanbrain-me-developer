@@ -29,7 +29,8 @@ export default function ResumePage() {
         </h2>
         <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {experienceFocusAreas.map((area) => (
-            <li key={area.slug} className="text-muted">
+            <li key={area.slug} className="flex items-start gap-2 text-muted">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
               {area.title}
             </li>
           ))}

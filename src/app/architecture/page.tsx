@@ -47,14 +47,19 @@ export default function ArchitecturePage() {
           site are shaped the way they are.
         </p>
       </section>
-      <div className="space-y-8 pb-20">
-        {PRINCIPLES.map((principle) => (
+      <div className="pb-20">
+        {PRINCIPLES.map((principle, index) => (
           <section
             key={principle.title}
-            className="border-t border-border pt-8 first:border-t-0 first:pt-0"
+            className="grid grid-cols-1 gap-3 border-t border-border py-10 first:border-t-0 first:pt-0 lg:grid-cols-[88px_1fr] lg:gap-10"
           >
-            <h2 className="text-lg font-semibold text-foreground">{principle.title}</h2>
-            <p className="mt-2 max-w-2xl text-muted">{principle.body}</p>
+            <span className="font-mono text-3xl font-semibold text-border sm:text-4xl">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">{principle.title}</h2>
+              <p className="mt-2 max-w-2xl text-muted">{principle.body}</p>
+            </div>
           </section>
         ))}
       </div>

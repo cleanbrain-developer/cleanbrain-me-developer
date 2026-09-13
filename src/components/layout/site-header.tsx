@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
-import { VisitorBadge } from "@/components/layout/visitor-badge";
 
 const NAV_ITEMS = [
   { href: "/experience", label: "Experience" },
@@ -17,15 +16,12 @@ export function SiteHeader() {
     <header className="border-b border-border bg-background/95 backdrop-blur">
       <Container>
         <div className="flex flex-wrap items-center justify-between gap-4 py-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/profile"
-              className="font-mono text-sm font-semibold tracking-tight text-foreground"
-            >
-              cleanbrain.developer
-            </Link>
-            <VisitorBadge />
-          </div>
+          <Link
+            href="/profile"
+            className="font-mono text-sm font-semibold tracking-tight text-foreground"
+          >
+            cleanbrain.developer
+          </Link>
           <nav aria-label="Primary" className="flex flex-wrap items-center gap-x-5 gap-y-2">
             {NAV_ITEMS.map((item) => (
               <Link

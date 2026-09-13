@@ -23,16 +23,24 @@ export default function ExperiencePage() {
           timeline — each area links to the Projects or Case Studies where it shows up concretely.
         </p>
       </section>
-      <div className="space-y-8 pb-20">
-        {experienceFocusAreas.map((area) => (
-          <section key={area.slug} className="border-t border-border pt-8 first:border-t-0 first:pt-0">
-            <h2 className="text-lg font-semibold text-foreground">{area.title}</h2>
-            <p className="mt-2 text-muted">{area.description}</p>
-            <ul className="mt-4 list-disc space-y-2 pl-5 text-muted">
-              {area.highlights.map((highlight) => (
-                <li key={highlight}>{highlight}</li>
-              ))}
-            </ul>
+      <div className="pb-20">
+        {experienceFocusAreas.map((area, index) => (
+          <section
+            key={area.slug}
+            className="grid grid-cols-1 gap-3 border-t border-border py-10 first:border-t-0 first:pt-0 lg:grid-cols-[88px_1fr] lg:gap-10"
+          >
+            <span className="font-mono text-3xl font-semibold text-border sm:text-4xl">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">{area.title}</h2>
+              <p className="mt-2 max-w-2xl text-muted">{area.description}</p>
+              <ul className="mt-4 max-w-2xl list-disc space-y-2 pl-5 text-muted">
+                {area.highlights.map((highlight) => (
+                  <li key={highlight}>{highlight}</li>
+                ))}
+              </ul>
+            </div>
           </section>
         ))}
       </div>
