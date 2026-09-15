@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchAllTimeCount, fetchTodayCount, recordVisitOnce } from "@/lib/visitor-counter";
+import { fetchAllTimeCount, fetchTodayCount, recordVisit } from "@/lib/visitor-counter";
 
 export function VisitorBadge() {
   const [todayCount, setTodayCount] = useState<number | null>(null);
@@ -10,7 +10,7 @@ export function VisitorBadge() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      await recordVisitOnce();
+      await recordVisit();
       const [today, allTime] = await Promise.all([fetchTodayCount(), fetchAllTimeCount()]);
       if (!cancelled) {
         setTodayCount(today);
