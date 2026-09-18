@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
+  fetchDeliverySummary,
   fetchDlqSchedule,
   fetchTopology,
   openLiveActivityStream,
@@ -146,6 +147,7 @@ export function LiveTopology() {
   const [dlqNextRunAt, setDlqNextRunAt] = useState<number>();
   const [dlqSecondsLeft, setDlqSecondsLeft] = useState<number>();
   const resyncScheduledRef = useRef(false);
+  const summaryRefetchTimer = useRef<number | null>(null);
   const [connected, setConnected] = useState(false);
   const [feed, setFeed] = useState<RelayHubLiveEvent[]>([]);
   const [loadError, setLoadError] = useState<string>();
@@ -200,6 +202,25 @@ export function LiveTopology() {
       })
       .catch(() => setLoadError("Couldn't load relayhub-java's topology (sources/targets/subscriptions)."));
   }, []);
+
+  /**
+   * Re-fetch the DLQ count and next-sweep time shortly after anything that
+   * could change them (a fresh dlq arrival, or a replay that just succeeded
+   * and left the queue) — debounced so a burst of SSE events triggers one
+   * request pair, not one per event. Never called for a replay that fails
+   * again: the delivery was already DEAD and stays DEAD, so nothing changed.
+   */
+  function scheduleSummaryRefetch() {
+    if (summaryRefetchTimer.current !== null) window.clearTimeout(summaryRefetchTimer.current);
+    summaryRefetchTimer.current = window.setTimeout(() => {
+      fetchDeliverySummary()
+        .then((s) => setSummary(s))
+        .catch(() => {});
+      fetchDlqSchedule()
+        .then((schedule) => setDlqNextRunAt(new Date(schedule.nextRunAt).getTime()))
+        .catch(() => {});
+    }, 600);
+  }
 
   useEffect(() => {
     const tick = window.setInterval(() => {
@@ -320,6 +341,10 @@ export function LiveTopology() {
           else spawn();
           triggerNodeHit(`tgt:${event.targetKey}`, delay);
           if (event.status === "failed") triggerShake(delay);
+          // Only a replay that *succeeded* actually changed the DLQ count (it
+          // just left the queue) — a replay that failed again was already
+          // DEAD and stays DEAD.
+          if (event.replay && event.status === "success") scheduleSummaryRefetch();
         } else if (event.stage === "dlq") {
           const deliveryKey = `${ingressKey}:${event.targetKey}`;
           const delay = readyDelay(lastDeliveryAt.current, deliveryKey, now);
@@ -329,7 +354,7 @@ export function LiveTopology() {
           else spawn();
           triggerNodeHit("dlq", delay);
           triggerShake(delay);
-          setSummary((prev) => (prev ? { ...prev, dead: prev.dead + 1 } : prev));
+          scheduleSummaryRefetch();
         }
       },
       setConnected,

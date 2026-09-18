@@ -60,6 +60,10 @@ export async function fetchDlqSchedule(): Promise<RelayHubDlqSchedule> {
   return getJson<RelayHubDlqSchedule>("/api/dlq/schedule");
 }
 
+export async function fetchDeliverySummary(): Promise<RelayHubDeliverySummary> {
+  return getJson<RelayHubDeliverySummary>("/api/deliveries/summary");
+}
+
 export async function fetchTopology(): Promise<{
   sources: RelayHubSource[];
   targets: RelayHubTarget[];

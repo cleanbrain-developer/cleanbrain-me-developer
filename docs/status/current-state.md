@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-09-13
+Last updated: 2026-09-18
 
 ## Current phase
 
@@ -59,6 +59,7 @@ Last updated: 2026-09-13
 - Verified: `npm run lint`/`test`/`build` all pass. `relayhub-java`'s second CORS expansion was pushed and its CI (`test` → `build-and-push` → `deploy`, including the Testcontainers-backed integration suite) succeeded end to end; confirmed live with real `curl -H "Origin: https://developer.cleanbrain.me"` requests showing `Access-Control-Allow-Origin` on both a plain endpoint (`/api/sources`) and the SSE stream's own preflight (`/api/live/stream`).
 - Added a mandatory Korean (`.ko.md`) companion for every `.md` document in this repository, per the maintainer's ADR-0004/ADR-0005 decision in `agent-dev-starter` (2026-09-17). English remains canonical for every pair.
 - Copied `scripts/check-ko-companions.sh` from `agent-dev-starter` and added a step to `.github/workflows/deploy.yml`'s `test` job that runs it with `--missing-only` and fails the build on a missing `.ko.md` companion, per `agent-dev-starter`'s `ADR-0009` (2026-09-18).
+- **Fixed a real bug the maintainer found in production**: DLQ items accumulated in `LiveTopology`'s counter but never resolved, even though `relayhub-java`'s own Live page correctly shows them clearing. Root cause: this repo's SSE handler only ever incremented `summary.dead` locally on a `dlq` stage event and never re-synced with the server, so it had no equivalent of `relayhub-java`'s own `scheduleDlqRefetch()` — a debounced re-fetch of `/api/deliveries/summary` and `/api/dlq/schedule`, triggered on a fresh `dlq` event *or* a `delivery` event with `replay: true` and `status: "success"` (a DLQ item that a `DlqAutoReplayScheduler` sweep just replayed successfully and removed from the queue). Re-read `relayhub-java`'s actual `frontend/src/pages/LivePage.tsx` and ported that exact mechanism: added `fetchDeliverySummary()` to `src/lib/relayhub/live-topology.ts`, and a debounced `scheduleSummaryRefetch()` in `live-topology.tsx` (wired to both the `dlq` branch and the replay-success case in the `delivery` branch), replacing the optimistic-only `dead: prev.dead + 1` increment that could only ever go up. Verified: `npm run lint`/`test`/`build` all pass.
 
 ## In progress
 
