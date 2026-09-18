@@ -60,6 +60,7 @@ Last updated: 2026-09-13
 - `LiveTopology`를 작성하면서 real한 lint 발견 사항 두 가지를 고쳤다(스타일 상의 사소한 지적이 아니다): `react-hooks/purity`는 `requestAnimationFrame` callback에서만 도달 가능한 함수 안의 `performance.now()` 호출을 올바르게 flag했다 — 규칙이 호출 지점을 증명할 수 없으므로, 무조건 silencing하는 대신 명시적이고 정당화된 `eslint-disable` comment가 필요했다; 그리고 세 개의 `delay > 0 ? window.setTimeout(spawn, delay) : spawn()` ternary-as-statement 표현(relayhub-java 자체의, 다르게 설정된 ESLint가 허용하는 패턴)은 여기서 `@typescript-eslint/no-unused-expressions`를 만족시키기 위해 명시적인 `if`/`else`로 다시 작성되었다.
 - 검증됨: `npm run lint`/`test`/`build` 모두 통과한다. `relayhub-java`의 두 번째 CORS 확장이 push되었고 그 CI(`test` → `build-and-push` → `deploy`, Testcontainers 기반 integration suite 포함)가 end to end로 성공했다. 일반 endpoint(`/api/sources`)와 SSE stream 자체의 preflight(`/api/live/stream`) 둘 다에서 `Access-Control-Allow-Origin`을 보여주는 real한 `curl -H "Origin: https://developer.cleanbrain.me"` 요청으로 live 상태에서 확인했다.
 - `agent-dev-starter`에서의 maintainer의 ADR-0004/ADR-0005 결정에 따라, 이 repository의 모든 `.md` 문서에 대해 필수적인 한국어(`.ko.md`) 번역본을 추가했다(2026-09-17). 각 쌍에서 영어 원본이 canonical로 남는다.
+- `agent-dev-starter`에서 `scripts/check-ko-companions.sh`를 복사하고, `.github/workflows/deploy.yml`의 `test` job에 `--missing-only`로 실행해서 `.ko.md` companion이 누락되면 build를 실패시키는 step을 추가했다, `agent-dev-starter`의 `ADR-0009`에 따름(2026-09-18).
 
 ## In progress
 

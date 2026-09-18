@@ -32,6 +32,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Every .md document must have a .ko.md companion (agent-dev-starter ADR-0004/
+      # ADR-0005), and any project with an existing CI pipeline picks this up by
+      # default (ADR-0009). --missing-only because a fresh checkout resets mtimes,
+      # making the script's staleness heuristic meaningless here.
+      - run: bash scripts/check-ko-companions.sh --missing-only
       - uses: actions/setup-node@v4
         with:
           node-version: 20
