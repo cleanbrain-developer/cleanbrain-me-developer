@@ -2,7 +2,7 @@
 
 # Current State
 
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 
 ## Current phase
 
@@ -62,6 +62,7 @@ Last updated: 2026-09-18
 - `agent-dev-starter`에서의 maintainer의 ADR-0004/ADR-0005 결정에 따라, 이 repository의 모든 `.md` 문서에 대해 필수적인 한국어(`.ko.md`) 번역본을 추가했다(2026-09-17). 각 쌍에서 영어 원본이 canonical로 남는다.
 - `agent-dev-starter`에서 `scripts/check-ko-companions.sh`를 복사하고, `.github/workflows/deploy.yml`의 `test` job에 `--missing-only`로 실행해서 `.ko.md` companion이 누락되면 build를 실패시키는 step을 추가했다, `agent-dev-starter`의 `ADR-0009`에 따름(2026-09-18).
 - **maintainer가 production에서 발견한 real한 bug를 고쳤다**: `LiveTopology`의 카운터에 DLQ item이 계속 쌓이기만 하고 해소되지 않았는데, `relayhub-java` 자체의 Live 페이지는 그것들이 정상적으로 해소되는 것을 보여준다. 근본 원인: 이 repo의 SSE handler는 `dlq` stage event가 올 때마다 로컬에서 `summary.dead`를 증가시키기만 했을 뿐 서버와 다시 동기화한 적이 없어서, `relayhub-java` 자체의 `scheduleDlqRefetch()`에 해당하는 것이 없었다 — 이것은 `/api/deliveries/summary`와 `/api/dlq/schedule`을 debounce하여 다시 fetch하는 함수로, 새로운 `dlq` event 또는 `replay: true`이고 `status: "success"`인 `delivery` event(즉 `DlqAutoReplayScheduler`의 sweep이 방금 성공적으로 replay해서 queue에서 제거한 DLQ item)에서 트리거된다. `relayhub-java`의 실제 `frontend/src/pages/LivePage.tsx`를 다시 읽고 그 정확한 메커니즘을 이식했다: `src/lib/relayhub/live-topology.ts`에 `fetchDeliverySummary()`를 추가했고, `live-topology.tsx`에 debounce된 `scheduleSummaryRefetch()`를 추가했다(`dlq` branch와 `delivery` branch의 replay-success 케이스 양쪽에 연결됨) — 오직 증가만 할 수 있었던 낙관적인 `dead: prev.dead + 1` 증가를 대체했다. 검증됨: `npm run lint`/`test`/`build` 모두 통과한다.
+- **같은 날의 후속 수정**: maintainer가 `LiveTopology`에서 replay missile이 여전히 DLQ node가 아니라 Event node에서 발사되는 것을 발견했다 — `relayhub-java`는 바로 하루 전에 정확히 이 동작을 얻었는데(`frontend/src/pages/LivePage.tsx`, "maintainer request 2026-09-18": replay의 pulse origin이 `eventPos ?? hub` 대신 `dlqPos`가 된다, item이 실제로는 새로 도착하는 게 아니라 DLQ를 떠나는 것이기 때문), 이 repo의 이전 이식 작업은 그 변경보다 앞서 있었다. origin 전환과, 같은 upstream commit의 인접한 `bumpDeadCountAtImpact()` 개선사항을 함께 이식했다 — impact 시점에 맞춰 로컬 `summary.dead`를 조정하는 것으로(`dlq` event에서 +1, 성공한 replay에서 -1), 이전 수정에서 추가된 debounce된 `scheduleSummaryRefetch()` 재동기화를 대체하는 게 아니라 그 위에 더해져서, 화면에 보이는 카운트가 missile이 실제로 착지하는 시점과 맞춰 바뀌도록 한다. 검증됨: `npm run lint`/`test`/`build` 모두 통과한다.
 
 ## In progress
 

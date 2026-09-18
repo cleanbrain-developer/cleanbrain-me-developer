@@ -191,6 +191,18 @@ export function LiveTopology() {
     }, delayMs + PULSE_DURATION_MS * 0.85);
   }
 
+  // Adjusts the DLQ count locally right when a pulse's impact actually lands
+  // (same 0.8 offset triggerShake uses for the dlq stage, so the number
+  // changes in step with what's on screen), instead of only ever learning the
+  // new count from scheduleSummaryRefetch()'s debounced re-fetch — which
+  // reflects the same change eventually, but on the network's schedule, not
+  // the missile's.
+  function bumpDeadCountAtImpact(delta: number, delayMs: number) {
+    window.setTimeout(() => {
+      setSummary((prev) => (prev ? { ...prev, dead: Math.max(0, prev.dead + delta) } : prev));
+    }, delayMs + PULSE_DURATION_MS * 0.8);
+  }
+
   useEffect(() => {
     fetchTopology()
       .then((topo) => {
@@ -336,7 +348,11 @@ export function LiveTopology() {
             readyDelay(lastDeliveryAt.current, deliveryKey, now),
           );
           lastDeliveryAt.current.set(deliveryKey, now + delay + PULSE_DURATION_MS);
-          const spawn = () => spawnPulse([eventPos ?? hub, hub, to], color, event.replay);
+          // A replay (manual or auto) launches from the DLQ node instead of
+          // the Event node: the item being retried is actually leaving the
+          // DLQ right now, not arriving fresh from a Source Event.
+          const origin = event.replay ? dlqPos : (eventPos ?? hub);
+          const spawn = () => spawnPulse([origin, hub, to], color, event.replay);
           if (delay > 0) window.setTimeout(spawn, delay);
           else spawn();
           triggerNodeHit(`tgt:${event.targetKey}`, delay);
@@ -344,7 +360,10 @@ export function LiveTopology() {
           // Only a replay that *succeeded* actually changed the DLQ count (it
           // just left the queue) — a replay that failed again was already
           // DEAD and stays DEAD.
-          if (event.replay && event.status === "success") scheduleSummaryRefetch();
+          if (event.replay && event.status === "success") {
+            bumpDeadCountAtImpact(-1, delay);
+            scheduleSummaryRefetch();
+          }
         } else if (event.stage === "dlq") {
           const deliveryKey = `${ingressKey}:${event.targetKey}`;
           const delay = readyDelay(lastDeliveryAt.current, deliveryKey, now);
@@ -354,6 +373,7 @@ export function LiveTopology() {
           else spawn();
           triggerNodeHit("dlq", delay);
           triggerShake(delay);
+          bumpDeadCountAtImpact(1, delay);
           scheduleSummaryRefetch();
         }
       },

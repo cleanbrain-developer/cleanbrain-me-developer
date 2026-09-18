@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 
 ## Current phase
 
@@ -60,6 +60,7 @@ Last updated: 2026-09-18
 - Added a mandatory Korean (`.ko.md`) companion for every `.md` document in this repository, per the maintainer's ADR-0004/ADR-0005 decision in `agent-dev-starter` (2026-09-17). English remains canonical for every pair.
 - Copied `scripts/check-ko-companions.sh` from `agent-dev-starter` and added a step to `.github/workflows/deploy.yml`'s `test` job that runs it with `--missing-only` and fails the build on a missing `.ko.md` companion, per `agent-dev-starter`'s `ADR-0009` (2026-09-18).
 - **Fixed a real bug the maintainer found in production**: DLQ items accumulated in `LiveTopology`'s counter but never resolved, even though `relayhub-java`'s own Live page correctly shows them clearing. Root cause: this repo's SSE handler only ever incremented `summary.dead` locally on a `dlq` stage event and never re-synced with the server, so it had no equivalent of `relayhub-java`'s own `scheduleDlqRefetch()` — a debounced re-fetch of `/api/deliveries/summary` and `/api/dlq/schedule`, triggered on a fresh `dlq` event *or* a `delivery` event with `replay: true` and `status: "success"` (a DLQ item that a `DlqAutoReplayScheduler` sweep just replayed successfully and removed from the queue). Re-read `relayhub-java`'s actual `frontend/src/pages/LivePage.tsx` and ported that exact mechanism: added `fetchDeliverySummary()` to `src/lib/relayhub/live-topology.ts`, and a debounced `scheduleSummaryRefetch()` in `live-topology.tsx` (wired to both the `dlq` branch and the replay-success case in the `delivery` branch), replacing the optimistic-only `dead: prev.dead + 1` increment that could only ever go up. Verified: `npm run lint`/`test`/`build` all pass.
+- **Follow-up fix, same day**: the maintainer noticed replay missiles in `LiveTopology` still visibly launched from the Event node, not the DLQ node — `relayhub-java` had gained exactly this behavior the day before (`frontend/src/pages/LivePage.tsx`, "maintainer request 2026-09-18": a replay's pulse origin becomes `dlqPos` instead of `eventPos ?? hub`, since the item is actually leaving the DLQ, not arriving fresh) and this repo's earlier port predated that change. Ported the origin switch, plus the adjacent `bumpDeadCountAtImpact()` refinement from the same upstream commit — an impact-timed local `summary.dead` adjustment (+1 on a `dlq` event, -1 on a successful replay) that changes the visible count in step with the missile's actual landing, on top of (not instead of) the debounced `scheduleSummaryRefetch()` reconciliation added in the previous fix. Verified: `npm run lint`/`test`/`build` all pass.
 
 ## In progress
 
