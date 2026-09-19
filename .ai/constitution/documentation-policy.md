@@ -13,8 +13,9 @@ Conversations and external design documents (including the original init prompt 
 - Structure and context model: `docs/architecture/`
 - Significant decisions and rationale: `docs/decisions/`
 - Current progress, next work, and open decisions: `docs/status/current-state.md`
-- Durable development principles: `.ai/constitution/`
-- Tool-specific bootstrap differences: `AGENTS.md` / `CLAUDE.md`
+- Durable engineering principles: `.specify/memory/constitution.md` (GitHub Spec Kit's own constitution role)
+- Document ownership and the `.ko.md` language policy: this document, `.ai/constitution/documentation-policy.md`
+- Agent bootstrap adapter: `AGENTS.md` (the sole adapter for every supported agent)
 
 Do not duplicate the same policy across files. When a summary is useful, link to the authoritative path.
 

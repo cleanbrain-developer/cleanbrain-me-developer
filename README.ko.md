@@ -4,7 +4,7 @@
 
 cleanbrain.developer를 위한 개발자 프로필, 엔지니어링 포트폴리오, 그리고 live engineering lab — `developer.cleanbrain.me`에 배포된 Next.js (App Router, TypeScript, Tailwind) 애플리케이션입니다.
 
-프로젝트 목적, 원칙, architecture, 현재 상태에 대해서는 [`CLAUDE.md`](CLAUDE.md) 또는 [`AGENTS.md`](AGENTS.md)에서 시작하세요. 이 파일들은 `PROJECT.yaml`, `.ai/constitution/`, `docs/product/`, `docs/architecture/`, `docs/decisions/`, `docs/status/current-state.md` 아래의 canonical source로 연결됩니다. 이 파일은 그 설계를 중복해서 담지 않습니다.
+프로젝트 목적, 원칙, architecture, 현재 상태에 대해서는 [`AGENTS.md`](AGENTS.md)에서 시작하세요. 이 파일은 `PROJECT.yaml`, `.specify/memory/constitution.md`, `.ai/constitution/documentation-policy.md`, `docs/product/`, `docs/architecture/`, `docs/decisions/`, `docs/status/current-state.md` 아래의 canonical source로 연결됩니다. 이 파일은 그 설계를 중복해서 담지 않습니다.
 
 이 프로젝트는 [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app)으로 부트스트랩된 [Next.js](https://nextjs.org) 프로젝트입니다.
 

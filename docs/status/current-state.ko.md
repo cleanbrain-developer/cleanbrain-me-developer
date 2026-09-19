@@ -2,7 +2,7 @@
 
 # Current State
 
-Last updated: 2026-09-19
+Last updated: 2026-09-20
 
 ## Current phase
 
@@ -63,6 +63,17 @@ Last updated: 2026-09-19
 - `agent-dev-starter`에서 `scripts/check-ko-companions.sh`를 복사하고, `.github/workflows/deploy.yml`의 `test` job에 `--missing-only`로 실행해서 `.ko.md` companion이 누락되면 build를 실패시키는 step을 추가했다, `agent-dev-starter`의 `ADR-0009`에 따름(2026-09-18).
 - **maintainer가 production에서 발견한 real한 bug를 고쳤다**: `LiveTopology`의 카운터에 DLQ item이 계속 쌓이기만 하고 해소되지 않았는데, `relayhub-java` 자체의 Live 페이지는 그것들이 정상적으로 해소되는 것을 보여준다. 근본 원인: 이 repo의 SSE handler는 `dlq` stage event가 올 때마다 로컬에서 `summary.dead`를 증가시키기만 했을 뿐 서버와 다시 동기화한 적이 없어서, `relayhub-java` 자체의 `scheduleDlqRefetch()`에 해당하는 것이 없었다 — 이것은 `/api/deliveries/summary`와 `/api/dlq/schedule`을 debounce하여 다시 fetch하는 함수로, 새로운 `dlq` event 또는 `replay: true`이고 `status: "success"`인 `delivery` event(즉 `DlqAutoReplayScheduler`의 sweep이 방금 성공적으로 replay해서 queue에서 제거한 DLQ item)에서 트리거된다. `relayhub-java`의 실제 `frontend/src/pages/LivePage.tsx`를 다시 읽고 그 정확한 메커니즘을 이식했다: `src/lib/relayhub/live-topology.ts`에 `fetchDeliverySummary()`를 추가했고, `live-topology.tsx`에 debounce된 `scheduleSummaryRefetch()`를 추가했다(`dlq` branch와 `delivery` branch의 replay-success 케이스 양쪽에 연결됨) — 오직 증가만 할 수 있었던 낙관적인 `dead: prev.dead + 1` 증가를 대체했다. 검증됨: `npm run lint`/`test`/`build` 모두 통과한다.
 - **같은 날의 후속 수정**: maintainer가 `LiveTopology`에서 replay missile이 여전히 DLQ node가 아니라 Event node에서 발사되는 것을 발견했다 — `relayhub-java`는 바로 하루 전에 정확히 이 동작을 얻었는데(`frontend/src/pages/LivePage.tsx`, "maintainer request 2026-09-18": replay의 pulse origin이 `eventPos ?? hub` 대신 `dlqPos`가 된다, item이 실제로는 새로 도착하는 게 아니라 DLQ를 떠나는 것이기 때문), 이 repo의 이전 이식 작업은 그 변경보다 앞서 있었다. origin 전환과, 같은 upstream commit의 인접한 `bumpDeadCountAtImpact()` 개선사항을 함께 이식했다 — impact 시점에 맞춰 로컬 `summary.dead`를 조정하는 것으로(`dlq` event에서 +1, 성공한 replay에서 -1), 이전 수정에서 추가된 debounce된 `scheduleSummaryRefetch()` 재동기화를 대체하는 게 아니라 그 위에 더해져서, 화면에 보이는 카운트가 missile이 실제로 착지하는 시점과 맞춰 바뀌도록 한다. 검증됨: `npm run lint`/`test`/`build` 모두 통과한다.
+- **ADS V2 migration을 이 repository에 소급 적용했다**(`agent-dev-starter`가 자체 V1 convention에서 open standard — `AGENTS.md` standard, GitHub Spec Kit, Agent Skills — 기반의 V2로 이동했다, 해당 repository의 `ADR-0010`부터 `ADR-0013`까지, 2026-09-20). 동일한 migration을 이 repository에도 그대로 적용했다:
+  - `.ai/constitution/agent-behavior.md`의 behavior contract를 `AGENTS.md`에 직접 병합해서(이제 유일하고 더 풍부한 adapter가 됨) `agent-behavior.md`/`.ko.md`를 삭제했다. `AGENTS.md`는 Next.js가 자동 관리하는 `<!-- BEGIN/END:nextjs-agent-rules -->` 블록 아래에 그대로 유지되며 손대지 않았다.
+  - `.ai/constitution/engineering-principles.md`의 내용(이 repo 고유의 demo-safety 및 RelayHub 통합 원칙 포함)을 새로운 `.specify/memory/constitution.md`(GitHub Spec Kit 자체의 constitution 역할)에 병합하고 `engineering-principles.md`/`.ko.md`를 삭제했다.
+  - `CLAUDE.md`/`CLAUDE.ko.md`를 완전히 삭제했다(`agent-dev-starter`의 `ADR-0011`): Claude Code는 v2.1.277(2026-09-18)부터 `AGENTS.md`를 네이티브로 읽으므로, 별도의 얇은 Claude adapter는 더 이상 중복 비용을 감당할 가치가 없다. `.github/workflows/deploy.yml`과 `README.md`에서 `CLAUDE.md`를 필수적으로 참조하는 곳이 있는지 확인했다 — `README.md`의 link만 있었고, `AGENTS.md`만 가리키도록 업데이트했다.
+  - `PROJECT.yaml`을 업데이트했다: `context.agent_entrypoints`(`codex`/`claude_code` map)를 단수형 `context.agent_entrypoint: AGENTS.md`로 바꾸었고, `agent-dev-starter` 자체를 그대로 따르는 `standards:` 블록(`agents_md`, `spec_kit.pinned_version: specify-cli==1.0.8`, `skills` 경로)을 추가했으며, `context.constitution`을 `context.specify_constitution: .specify/memory/constitution.md`와 `context.documentation_policy: .ai/constitution/documentation-policy.md`로 대체했다. 이미 `AGENTS.md`, architecture 문서들, 이 파일에서 널리 참조되고 있었지만 `PROJECT.yaml`의 canonical 경로로 선언된 적이 없었던 `docs/infra-required-changes.md`를 `context.infra_required_changes`로 정식화했다. `principles` 목록의 `thin-agent-adapters` 항목을 `standards-over-reinvention`(이제 `.specify/memory/constitution.md`에 정의됨)으로 교체했다 — 단일 adapter 모델이 되면서 예전 원칙의 전제가 무의미해졌기 때문이다.
+  - `docs/architecture/repository-structure.md`와 `docs/architecture/agent-context-model.md`를 `AGENTS.md`가 유일한 adapter이고 `.specify/memory/constitution.md`가 constitution의 새 home이 되도록 업데이트했다; 이제 의미가 없어진 "adapter 간 차이" 충돌 처리 항목을 제거했다. `docs/architecture/overview.md`는 ADS-convention 참조가 전혀 없고 이 프로젝트 고유의 product/architecture 사실만 담고 있었으므로 변경이 필요하지 않았다.
+  - `docs/product/goals.md`의 "Success criteria"(bootstrap acceptance test)와 `.ai/constitution/documentation-policy.md`의 "Single responsibility" 목록을 새 파일 위치로 업데이트했다; `docs/infra-required-changes.md`의 예전 `engineering-principles.md` 경로 인용도 업데이트했다.
+  - 예전 `.ai/skills/` 디렉터리(`ADR-0003`의 원래 표현, `agent-dev-starter`의 `ADR-0012`가 실제 agent-discovered 경로인 `.claude/skills/`/`.agents/skills/`로 정정함)가 있는지 확인했다 — 이 repository에는 존재하지 않아서 옮길 것이 없었다.
+  - 이 migration에서 손댄 모든 파일(새로운 `.specify/memory/constitution.md` 포함)에 대해 같은 변경 안에서 `.ko.md` 번역본을 추가했다, 이 repository 자체의 필수 이중언어 정책에 따름; commit 전에 `bash scripts/check-ko-companions.sh --missing-only`를 실행해서 0건 누락임을 확인했다.
+  - 이 repository 자체의 `docs/decisions/ADR-0001`부터 `ADR-0005`까지는 손대지 않았다 — 이들은 `agent-dev-starter`의 ADR 번호와 무관한 이 repository 고유의 product/architecture 결정 기록이며, ADR은 accepted된 이후 조용히 재작성되지 않는다. `ADR-0001`의 텍스트는 2026-09-12 결정 시점 기준으로 여전히 예전의 `AGENTS.md`+`CLAUDE.md` 이중 adapter 모델을 설명하고 있다; 이는 이제 이 current-state entry에 의해 실제로는 대체되었으며, `agent-dev-starter`가 역사를 수정하는 대신 새로운 `ADR-0011`을 기록하는 것과 같은 방식이다.
+  - **real한 GitHub Spec Kit CLI는 의도적으로 설치하지 않았다.** 이 환경에는 동작하는 Python/`uv`/`pip`가 없고(동작하지 않는 Windows Store stub `python.exe`만 있음) `specify init`을 실제로 실행해서 `.specify/`의 템플릿/스크립트나 real한 `.claude/skills/speckit-*/SKILL.md` / `.agents/skills/speckit-*/SKILL.md` 파일을 렌더링할 수 없었다. `agent-dev-starter`의 `ADR-0010`에 따라, Spec Kit의 템플릿 source를 추측해서 그 렌더링된 파일을 손으로 작성하는 것은 미묘하게 잘못된 skill 파일을 배포할 위험이 있으므로, 아무것도 생성하지 않았다. `.specify/memory/constitution.md`는 대신 손으로 작성했다 — 이는 durable-principles 문서이지 CLI-rendered output이 아니므로 그런 위험이 없다. 아래 "Known constraints"와 "Next"에서 이로 인해 남은 후속 작업을 참고하라.
 
 ## In progress
 
@@ -73,6 +84,7 @@ Last updated: 2026-09-19
 1. Test suite를 넓힌다: `live-observability.test.ts`는 순수한 Prometheus-response parsing을 커버하지만, 아직 route-level smoke test는 없다(`/`의 redirect, dashboard를 렌더링하는 `/lab/relayhub`, 이전 홈페이지를 렌더링하는 `/profile`) — 지금까지는 변경마다 브라우저 screenshot으로만 수동 검증했다.
 2. `vitest`/Node 버전 불일치를 해결하는 데 노력을 들일지(이 환경/CI의 Node를 ≥22로 올리고 `vitest@5`로 이동) `vitest@3.2.7`에 머물지 결정한다 — "Known constraints" 참고. (Note: `.github/workflows/deploy.yml`의 `node-version: 20`을 사용하는 GitHub Actions의 `actions/setup-node@v4`는 현재 Node 20.x patch release를 가져오며, 반드시 이 local 환경의 20.11.1과 같지는 않다 — 결정하기 전에 CI의 Node 20도 `styleText`가 없는지, 아니면 이것이 순전히 local-환경 제약인지 다시 확인할 가치가 있다.)
 3. dashboard가 시간이 지남에 따라 `relayhub-java`의 더 많은 사용 가능한 metric을 노출해야 하는지 고려한다 — 어떤 추가든 ADR-0004에 따라 해당 서비스에 대한 자체적이고 의도적인 CORS-allowlist entry가 필요하며, 포괄적인 grant는 안 된다.
+4. 동작하는 Python/`uv`/`pip` toolchain이 이 환경이나 CI에서 사용 가능해지면, real한 `specify init --here --integration claude --integration codex`(`PROJECT.yaml`의 `standards.spec_kit.pinned_version`에 따라 `specify-cli==1.0.8`로 고정)를 실행해서 `.specify/`의 템플릿/스크립트와 real한 `.claude/skills/speckit-*/SKILL.md` / `.agents/skills/speckit-*/SKILL.md` 파일을 실제로 생성한다 — 이는 2026-09-20 V2 migration 동안 의도적으로 건너뛰었다("Completed"와 "Known constraints" 참고). 그 이후, 어느 한쪽을 무작정 덮어쓰는 대신 CLI가 생성한 `.specify/memory/constitution.md`를 여기 커밋된 손으로 작성한 버전과 조율한다.
 
 ## Open decisions
 
@@ -81,7 +93,7 @@ Last updated: 2026-09-19
 ## Known constraints
 
 - V1에는 backend, database, authentication, CMS가 없다(`docs/product/scope.md` 참고).
-- 이 사이트에는 이제 mock/simulation UI가 없다(ADR-0005) — 그 질문을 명시적으로 다시 여는 새로운 ADR 없이는 합성 "이벤트 생성" 기능을 재도입하지 않는다. `relayhub-java` 통합은 `GET`-only이며 이미 public한 endpoint로 CORS 범위가 한정되어야 한다; 방문자로부터의 임의의 URL, header, script, credential 입력은 절대 구현되어서는 안 된다(`.ai/constitution/engineering-principles.md` 참고).
+- 이 사이트에는 이제 mock/simulation UI가 없다(ADR-0005) — 그 질문을 명시적으로 다시 여는 새로운 ADR 없이는 합성 "이벤트 생성" 기능을 재도입하지 않는다. `relayhub-java` 통합은 `GET`-only이며 이미 public한 endpoint로 CORS 범위가 한정되어야 한다; 방문자로부터의 임의의 URL, header, script, credential 입력은 절대 구현되어서는 안 된다(`.specify/memory/constitution.md` 참고).
 - 대상 cluster는 2 vCPU / 4 GB RAM / 40 GB disk이다(`cleanbrain-me-infra` 기준) — 모든 서비스에 걸친 결합 resource budget이 이미 이 상한선에 근접하고 있으므로(해당 repository의 README와 `cleanbrain-me-entrance` 자체의 `current-state.md` 참고), 이 앱은 가벼운 상태를 유지해야 한다.
 - 이 repository는 애플리케이션 source, Dockerfile, CI를 소유하고, `cleanbrain-me-infra`는 production Kubernetes manifest를 소유한다 — 둘은 서로의 콘텐츠를 중복해서는 안 된다. 필요한 infra 변경으로 보이는 것은 여기서 구현하지 않고 `docs/infra-required-changes.md`에 기록한다.
 - maintainer의 명시적인 선택에 따라, 사이트 어디에도 real한 시간순 근무 이력 timeline(회사 이름, 직함, 날짜)이 없다 — Experience/Resume은 오직 focus-area narrative일 뿐이다. maintainer가 나중에 명시적으로 timeline을 요청하는 경우에만 재검토한다.
@@ -90,6 +102,7 @@ Last updated: 2026-09-19
 - `LiveDashboard`는 `relayhub-java`의 특정 API/metric 형태(`/api/deliveries/summary`와 `/api/targets`의 필드 이름, PromQL metric 이름 `relayhub_ingress_events_total`/`relayhub_delivery_attempts_total`)에 real한 runtime 의존성을 만든다 — ADR-0004 참고. 이 의존성을 인지하지 못한 채 만들어진 그 API의 breaking change는 dashboard를 조용히 깨뜨릴 것이다(crash가 아니라 error/retry state로 degrade하지만, 결합은 real하다). 또한 이 repository 쪽에는 caching이나 rate limiting 없이 열려 있는 탭마다 10초마다 polling한다 — 현재 트래픽에서는 괜찮지만, 상황이 바뀌면 기억해둘 가치가 있다.
 - `/`는 `/lab/relayhub`로의 client-side-only redirect다(ADR-0003의 static-export 제약) — crawler나 no-JS client는 사이트의 `<head>` metadata는 보지만 interactive한 body는 보지 못한다. 이전에 `/`에 있던 전체 포트폴리오 narrative는 이제 `/profile`에 있으며 header logo에서 link된다. `relayhub-java`가 다운되었을 때 더 이상 offline-safe한 fallback이 없다 — 의도적인 trade-off다(ADR-0005 참고).
 - `vitest`는 최신 버전이 아니라 `^3.2.7`로 고정되어 있는데, 이는 `vitest@5`의 toolchain에서 real한 Node 20.11.1 비호환 문제 때문이다(위의 "Deployment prep" 참고) — runtime Node 버전이 이를 지원하는지 먼저 확인하지 않고는 `^5`로 올리지 않는다.
+- **GitHub Spec Kit CLI(`PROJECT.yaml`의 `standards.spec_kit.pinned_version`에 고정된 `specify-cli==1.0.8`)는 이 repository에 실제로 설치되어 있지 않다.** `.specify/memory/constitution.md`는 존재하고 손으로 작성되었지만(`agent-dev-starter` 자체의 draft를 각색한 것으로, 정당한 durable-principles 문서이지 CLI-rendered output이 아니다 — `agent-dev-starter`의 `ADR-0010` 참고), `.specify/templates/`도, `.specify/scripts/`도, real한 `.claude/skills/speckit-*/SKILL.md`나 `.agents/skills/speckit-*/SKILL.md` 파일도 없다. 이 환경에 `specify init`을 실행할 동작하는 Python/`uv`/`pip` toolchain이 없기 때문이다. 이 gap을 채우기 위해 그런 Spec Kit-rendered 파일을 손으로 작성하지 말 것 — 동작하는 toolchain이 사용 가능해지면 real한 pinned CLI를 실행한다("Next" 참고).
 
 ## Exit criteria for this phase
 

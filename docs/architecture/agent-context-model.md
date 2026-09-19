@@ -4,7 +4,7 @@
 
 ### Permanent context
 
-Information that persists across sessions, including project purpose, scope, architecture, engineering principles, and accepted decisions. Store it in `PROJECT.yaml`, `.ai/constitution/`, product and architecture documents, and ADRs.
+Information that persists across sessions, including project purpose, scope, architecture, engineering principles, and accepted decisions. Store it in `PROJECT.yaml`, `.specify/memory/constitution.md`, `.ai/constitution/documentation-policy.md`, product and architecture documents, and ADRs.
 
 ### Working context
 
@@ -18,9 +18,9 @@ The current user request, relevant code, and temporary research findings. Load i
 
 ## Bootstrap order
 
-1. Start from the relevant agent adapter (`CLAUDE.md` or `AGENTS.md`).
+1. Start from `AGENTS.md` (the sole adapter — `agent-dev-starter`'s `ADR-0011`).
 2. Read `PROJECT.yaml` to identify the project and phase.
-3. Read the constitution (`.ai/constitution/`) to understand behavioral boundaries.
+3. Read `.specify/memory/constitution.md` (and `.ai/constitution/documentation-policy.md` for anything document-related) to understand behavioral boundaries.
 4. Read product documents (`docs/product/`) to understand purpose and scope.
 5. Read architecture documents (`docs/architecture/`) to understand structure and responsibilities.
 6. Read accepted ADRs (`docs/decisions/`) relevant to the current work.
@@ -34,7 +34,6 @@ The current user request, relevant code, and temporary research findings. Load i
 - A user request defines the work objective but does not silently discard accepted architecture (e.g. it does not justify implementing a real network call in the public Lab or adding arbitrary URL input).
 - A specific accepted ADR takes precedence over a general architecture description.
 - Current state does not redefine principles or design.
-- Differences between adapters do not change the shared source of truth.
 - Report unresolved conflicts instead of hiding them behind assumptions.
 
 ## Bootstrap acceptance test

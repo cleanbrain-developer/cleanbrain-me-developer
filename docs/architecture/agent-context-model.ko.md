@@ -6,7 +6,7 @@
 
 ### Permanent context
 
-프로젝트 목적, 범위, architecture, engineering 원칙, 합의된 결정 등 세션 간에 지속되는 정보입니다. `PROJECT.yaml`, `.ai/constitution/`, product/architecture 문서, ADR에 저장합니다.
+프로젝트 목적, 범위, architecture, engineering 원칙, 합의된 결정 등 세션 간에 지속되는 정보입니다. `PROJECT.yaml`, `.specify/memory/constitution.md`, `.ai/constitution/documentation-policy.md`, product/architecture 문서, ADR에 저장합니다.
 
 ### Working context
 
@@ -20,9 +20,9 @@
 
 ## Bootstrap 순서
 
-1. 관련 agent adapter(`CLAUDE.md` 또는 `AGENTS.md`)에서 시작한다.
+1. `AGENTS.md`(유일한 adapter — `agent-dev-starter`의 `ADR-0011`)에서 시작한다.
 2. `PROJECT.yaml`을 읽어 프로젝트와 phase를 파악한다.
-3. constitution(`.ai/constitution/`)을 읽어 behavioral boundary를 이해한다.
+3. `.specify/memory/constitution.md`(그리고 문서 관련 사항은 `.ai/constitution/documentation-policy.md`)를 읽어 behavioral boundary를 이해한다.
 4. product 문서(`docs/product/`)를 읽어 목적과 범위를 이해한다.
 5. architecture 문서(`docs/architecture/`)를 읽어 구조와 책임을 이해한다.
 6. 현재 작업과 관련된 accepted ADR(`docs/decisions/`)을 읽는다.
@@ -36,7 +36,6 @@
 - 사용자 요청은 작업 목표를 정의하지만, 합의된 architecture를 조용히 무시하지는 않는다(예: public Lab에 real network call을 구현하거나 임의의 URL 입력을 추가하는 것을 정당화하지 않는다).
 - 구체적인 accepted ADR은 일반적인 architecture 설명보다 우선한다.
 - Current state는 원칙이나 설계를 재정의하지 않는다.
-- adapter 간 차이는 공유된 source of truth를 바꾸지 않는다.
 - 미해결 충돌은 가정으로 감추지 말고 보고한다.
 
 ## Bootstrap acceptance test

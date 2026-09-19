@@ -2,7 +2,7 @@
 
 # Infra-Required Changes
 
-이 문서는 이 repository가 스스로 구현할 수 없거나 구현해서는 안 되는 infrastructure 요구사항을 기록합니다(`.ai/constitution/engineering-principles.md`의 "Separated boundaries" 참고). Kubernetes, DNS, TLS, Gateway, CI/CD-infrastructure 변경은 `cleanbrain-me-infra`가 소유합니다. 이 파일의 내용은 자동으로 적용되지 않습니다 — 각 항목은 해당 repository에서 사람이 검토하는 변경이 필요합니다.
+이 문서는 이 repository가 스스로 구현할 수 없거나 구현해서는 안 되는 infrastructure 요구사항을 기록합니다(`.specify/memory/constitution.md`의 "Separated boundaries" 참고). Kubernetes, DNS, TLS, Gateway, CI/CD-infrastructure 변경은 `cleanbrain-me-infra`가 소유합니다. 이 파일의 내용은 자동으로 적용되지 않습니다 — 각 항목은 해당 repository에서 사람이 검토하는 변경이 필요합니다.
 
 ## Pending
 

@@ -14,7 +14,7 @@
 
 ## Success criteria
 
-이전 conversation 없이 `CLAUDE.md`나 `AGENTS.md`에서만 시작하는 새로운 agent session은 다음 질문에 정확히 답할 수 있어야 합니다.
+이전 conversation 없이 `AGENTS.md`에서만 시작하는 새로운 agent session은 다음 질문에 정확히 답할 수 있어야 합니다.
 
 - 이 프로젝트는 무엇이며, 의도적으로 하지 않는 것은 무엇인가?
 - 왜 존재하는가?

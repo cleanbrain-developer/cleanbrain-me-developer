@@ -8,9 +8,9 @@
 |---|---|---|
 | `README.md` | 사람을 위한 소개, dev/build 명령어, canonical 문서로의 navigation | 완전한 design specification |
 | `PROJECT.yaml` | 구조화된 프로젝트 정체성과 phase | narrative architecture document |
-| `AGENTS.md` | Codex-compatible bootstrap adapter (Next.js가 자동 관리하는 블록 아래에 추가됨) | 공통 정책 source |
-| `CLAUDE.md` | Claude Code bootstrap adapter | `AGENTS.md`의 중복 |
-| `.ai/constitution/` | 지속적인 engineering 및 agent 원칙 | product feature requirement |
+| `AGENTS.md` | 모든 지원 agent를 위한 유일한 bootstrap adapter이자 behavioral contract(Next.js가 자동 관리하는 블록 아래에 추가됨; `agent-dev-starter`의 `ADR-0011`) | 공통 정책 source, 또는 여러 중복 adapter 중 하나 |
+| `.specify/memory/constitution.md` | 지속적인 engineering 원칙(GitHub Spec Kit 자체의 constitution 역할 — `agent-dev-starter`의 `ADR-0013`) | product feature requirement |
+| `.ai/constitution/documentation-policy.md` | 문서 소유권과 `.ko.md` 언어 정책 — 어떤 open standard도 이를 소유하지 않음 | product feature requirement나 engineering 원칙(이들은 `.specify/memory/constitution.md`에 있음) |
 | `docs/product/` | 문제, 사용자, 목표, 범위 | 구현 지침 |
 | `docs/architecture/` | 구조, 경계, context model | decision history |
 | `docs/decisions/` | 중대한 결정과 근거 | mutable current-state checklist |
@@ -26,7 +26,7 @@ Adapter와 summary는 authoritative한 문서를 안쪽으로 가리킬 수 있�
 
 ```text
 README ──────────────┐
-AGENTS / CLAUDE ──────┼──> PROJECT.yaml + constitution + docs
+AGENTS.md ────────────┼──> PROJECT.yaml + .specify/memory/constitution.md + docs
 current-state ────────┘                 │
                                          └──> accepted ADRs
 ```

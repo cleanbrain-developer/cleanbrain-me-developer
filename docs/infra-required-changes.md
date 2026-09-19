@@ -1,6 +1,6 @@
 # Infra-Required Changes
 
-This document records infrastructure requirements this repository cannot and must not implement itself (see `.ai/constitution/engineering-principles.md`, "Separated boundaries"). Kubernetes, DNS, TLS, Gateway, and CI/CD-infrastructure changes are owned by `cleanbrain-me-infra`. Nothing in this file is applied automatically — each item needs a human-reviewed change in that repository.
+This document records infrastructure requirements this repository cannot and must not implement itself (see `.specify/memory/constitution.md`, "Separated boundaries"). Kubernetes, DNS, TLS, Gateway, and CI/CD-infrastructure changes are owned by `cleanbrain-me-infra`. Nothing in this file is applied automatically — each item needs a human-reviewed change in that repository.
 
 ## Pending
 

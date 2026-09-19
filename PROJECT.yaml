@@ -32,7 +32,7 @@ supported_agents:
 principles:
   - repository-first-context
   - agent-agnostic-core
-  - thin-agent-adapters
+  - standards-over-reinvention
   - minimal-task-prompts
   - evidence-before-change
   - explicit-architecture-decisions
@@ -49,16 +49,25 @@ current_phase:
     (ADR-0005). No remaining foundation or deployment gaps; ordinary
     feature/content work from here. See docs/status/current-state.md, "Next".
 
+standards:
+  agents_md: AGENTS.md
+  spec_kit:
+    pinned_version: specify-cli==1.0.8   # pinned by agent-dev-starter's ADR-0010; not yet installed here, see docs/status/current-state.md "Known constraints"
+    memory: .specify/memory/
+  skills:
+    claude_code: .claude/skills/
+    codex: .agents/skills/
+
 context:
   human_entrypoint: README.md
-  agent_entrypoints:
-    codex: AGENTS.md
-    claude_code: CLAUDE.md
-  constitution: .ai/constitution/
+  agent_entrypoint: AGENTS.md
+  specify_constitution: .specify/memory/constitution.md
+  documentation_policy: .ai/constitution/documentation-policy.md
   product: docs/product/
   architecture: docs/architecture/
   decisions: docs/decisions/
   current_state: docs/status/current-state.md
+  infra_required_changes: docs/infra-required-changes.md
 
 delivery:
   implementation_present: true

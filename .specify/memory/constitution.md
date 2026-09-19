@@ -1,6 +1,6 @@
-# Engineering Principles
+# Constitution
 
-This document defines engineering principles that should outlive a technology choice or an individual feature in this repository.
+This is the project's constitution in the sense GitHub Spec Kit uses the term: durable principles every change in this repository is evaluated against. It replaces the old `.ai/constitution/engineering-principles.md` (see `docs/status/current-state.md`'s 2026-09-20 V2 migration entry, mirroring `agent-dev-starter`'s `ADR-0013`) — this is now the one place these principles live.
 
 ## Evidence before change
 
@@ -29,3 +29,7 @@ There is no adapter/mock boundary to preserve anymore (ADR-0005 removed it) — 
 ## Separated boundaries
 
 Keep domain concerns (content, the `relayhub-java` live-telemetry client) separate from external systems and tooling (build tool, container runtime, Kubernetes deployment). Deployment and infrastructure concerns belong to the `cleanbrain-me-infra` repository, not to this repository's source tree.
+
+## Standards over reinvention
+
+Prefer an established open standard or convention (`AGENTS.md`, GitHub Spec Kit, Agent Skills) over building an equivalent mechanism from scratch, per this repository's V2 migration onto `agent-dev-starter`'s own standards-aligned foundation (see `docs/status/current-state.md`). Before adding a project-specific process, decision format, or file convention, check whether an open standard already solves it.

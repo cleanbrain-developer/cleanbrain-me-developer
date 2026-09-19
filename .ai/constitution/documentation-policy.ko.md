@@ -15,8 +15,9 @@ Conversation과 외부 design document(원래의 init prompt와 이 프로젝트
 - 구조와 context model: `docs/architecture/`
 - 중대한 결정과 근거: `docs/decisions/`
 - 현재 진행 상황, 다음 작업, 미해결 결정: `docs/status/current-state.md`
-- 지속적인 개발 원칙: `.ai/constitution/`
-- 도구별 bootstrap 차이: `AGENTS.md` / `CLAUDE.md`
+- 지속적인 engineering 원칙: `.specify/memory/constitution.md`(GitHub Spec Kit 자체의 constitution 역할)
+- 문서 소유권과 `.ko.md` 언어 정책: 이 문서, `.ai/constitution/documentation-policy.md`
+- Agent bootstrap adapter: `AGENTS.md`(모든 지원 agent를 위한 유일한 adapter)
 
 동일한 정책을 여러 파일에 중복해서 두지 않는다. 요약이 유용한 경우, authoritative한 경로로 link한다.
 

@@ -6,9 +6,9 @@
 |---|---|---|
 | `README.md` | Human introduction, dev/build commands, navigation to canonical docs | Full design specification |
 | `PROJECT.yaml` | Structured project identity and phase | Narrative architecture document |
-| `AGENTS.md` | Codex-compatible bootstrap adapter (appended below Next.js's auto-managed block) | Common policy source |
-| `CLAUDE.md` | Claude Code bootstrap adapter | Duplicate of `AGENTS.md` |
-| `.ai/constitution/` | Durable engineering and agent principles | Product feature requirements |
+| `AGENTS.md` | The sole bootstrap adapter and behavioral contract for every supported agent (appended below Next.js's auto-managed block; `agent-dev-starter`'s `ADR-0011`) | Common policy source, or one of several duplicate adapters |
+| `.specify/memory/constitution.md` | Durable engineering principles (GitHub Spec Kit's own constitution role — `agent-dev-starter`'s `ADR-0013`) | Product feature requirements |
+| `.ai/constitution/documentation-policy.md` | Document ownership and the `.ko.md` language policy — no open standard owns this | Product feature requirements or engineering principles (those live in `.specify/memory/constitution.md`) |
 | `docs/product/` | Problem, users, goals, scope | Implementation instructions |
 | `docs/architecture/` | Structure, boundaries, context model | Decision history |
 | `docs/decisions/` | Significant decisions and rationale | Mutable current-state checklist |
@@ -24,7 +24,7 @@ Adapters and summaries may point inward to authoritative documents. Authoritativ
 
 ```text
 README ──────────────┐
-AGENTS / CLAUDE ──────┼──> PROJECT.yaml + constitution + docs
+AGENTS.md ────────────┼──> PROJECT.yaml + .specify/memory/constitution.md + docs
 current-state ────────┘                 │
                                          └──> accepted ADRs
 ```

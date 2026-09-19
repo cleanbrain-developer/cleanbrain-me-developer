@@ -12,7 +12,7 @@
 
 ## Success criteria
 
-A new agent session, starting only from `CLAUDE.md` or `AGENTS.md` with no prior conversation, should accurately answer:
+A new agent session, starting only from `AGENTS.md` with no prior conversation, should accurately answer:
 
 - What is this project, and what does it deliberately not do?
 - Why does it exist?
