@@ -1,4 +1,5 @@
 import type { CaseStudy } from "@/content/types";
+import { IncidentSummary } from "@/components/case-study/incident-summary";
 
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -28,6 +29,8 @@ export function CaseStudyDetail({ caseStudy }: { caseStudy: CaseStudy }) {
         </h1>
         <p className="mt-3 max-w-2xl text-muted">{caseStudy.summary}</p>
       </header>
+
+      <IncidentSummary caseStudy={caseStudy} />
 
       <DetailSection title="Context">
         <p>{caseStudy.context}</p>

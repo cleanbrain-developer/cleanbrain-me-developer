@@ -3,6 +3,7 @@ import type { CaseStudy } from "@/content/types";
 export const legacyBatchState: CaseStudy = {
   slug: "legacy-batch-state",
   title: "Legacy State vs. New Configuration in Batch Processing",
+  incidentType: "Schema Drift",
   summary:
     "A batch job that applied configuration changes across many existing records assumed every record's state shape matched the current configuration schema — an assumption that broke down for records created under an older configuration. This is a composite, abstracted scenario — no real company, customer, or system names are used.",
   context:

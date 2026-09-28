@@ -60,6 +60,8 @@ export interface Project {
 export interface CaseStudy {
   slug: string;
   title: string;
+  /** Short category label extracted from `title`, e.g. "Race Condition" — not a new claim. */
+  incidentType: string;
   summary: string;
   context: string;
   problem: string;

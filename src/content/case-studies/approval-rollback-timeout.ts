@@ -3,6 +3,7 @@ import type { CaseStudy } from "@/content/types";
 export const approvalRollbackTimeout: CaseStudy = {
   slug: "approval-rollback-timeout",
   title: "Timeout and Concurrency Issues in an External-Approval Rollback Flow",
+  incidentType: "Timeout & Concurrency",
   summary:
     "A workflow that depended on an external system's approval step had a rollback path that assumed the approval call would complete quickly and exactly once. Neither assumption held under real conditions. This is a composite, abstracted scenario — no real company, customer, or system names are used.",
   context:

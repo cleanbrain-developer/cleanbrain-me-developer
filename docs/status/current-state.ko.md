@@ -94,6 +94,11 @@ Last updated: 2026-09-29
   - 새 `src/components/project/architecture-diagram.tsx`: 작고 static한(애니메이션 없음 — 한 번만 렌더링되는 diagram에는 필요 없다), 손으로 만든 SVG flow-diagram primitive(`nodes`/`edges` prop, 박스+화살표 line, theme-colored) — `LiveTopology`의 hub-spoke pulse 엔진과 의도적으로 분리되어 있어서, Live console에 대한 regression 위험이 전혀 없다. 새로 hand-placed-coordinate content module 두 개가 이를 feed한다: `content/relayhub-architecture.ts`(Source → Kafka → Validate → Transform → Deliver → Target, 실패 시 Retry → DLQ → Replay로 분기)와 `content/english-core-speaking-architecture.ts`(User → Vue Frontend → NestJS Backend, PostgreSQL / OAuth Provider / AI-LLM API로 분기) — 두 UX spec 자체의 theme-consistency-risk 근거에 따라 Mermaid는 사용하지 않았다.
   - diagram은 `width="100%"`가 아니라 **고정된 pixel width**로 렌더링되며 `overflow-x-auto`로 감싸져 있다 — `/lab/relayhub`의 Recent Activity table이 이미 만들고 있는 것과 같은 trade-off다(`min-w-[520px]` + scroll), narrow viewport에서 node label을 읽을 수 없는 크기로 줄이는 대신. 첫 pass가 diagram을 읽을 수 없는 크기로 줄여버린 것을 real한 mobile screenshot을 실제로 보고서 발견했다 — 코드만 보고 맞다고 가정하지 않았다.
   - 검증됨: `npm run lint`/`test`/`build` 모두 통과한다. 빌드된 static export에 대해 desktop(1440px)과 mobile(390px)에서 real한 headless-Chromium pass를 했다: `/projects`가 `kind`가 보이는 두 card를 보여주고; 두 project detail page 모두 diagram을 legible하게 렌더링하며, RelayHub 쪽은 desktop content column에 scrollbar 없이 맞고, 둘 다 mobile에서 (줄어들지 않고) 올바르게 scroll된다.
+- **조율된 roadmap 항목 2를 구현했다: Case Study UX**(`/case-studies`와 `/case-studies/[slug]`), Project visual layer와 같은 좁은 one-slice scope다.
+  - `content/types.ts` + 세 개의 case-study content 파일: `CaseStudy`에 `incidentType`(예: "Race Condition", "Timeout & Concurrency", "Schema Drift")을 추가했다 — 각 case study의 기존 `title`에서 직접 추출한 label이지 새로운 주장이 아니다. 다른 새 field는 없다: summary card의 나머지 row는 이미 존재하던 데이터(`symptoms[0]`, `rootCause`, `solution`, `tradeoffs[0]`)로 매핑된다.
+  - 새 `src/components/case-study/incident-summary.tsx`: `Card` 기반(지난 slice에서 `ProjectCard`/`ProjectDetail`이 채택한 것과 같은 `src/components/ui/card.tsx`) definition-list — Incident Type / Primary Symptom / Root Cause / Resolution / Trade-off — `CaseStudyDetail`이 header 바로 뒤, 기존 10-section Context→Lessons Learned narrative 앞에 렌더링한다(순수하게 추가된 것이며, 그 narrative는 건드리지 않았다).
+  - `CaseStudyCard`(`case-study-card.tsx`)를 `ProjectCard`와 같은 방식으로 `Card`/`Badge`로 retrofit해서 `incidentType`을 badge로 보여준다 — `/projects`와 `/case-studies`가 이제 서로 다른 두 개의 손으로 만든 스타일 대신 하나의 일관된 card 시각 언어를 공유한다.
+  - 검증됨: `npm run lint`/`test`/`build` 모두 통과한다. desktop(1440px)과 mobile(390px)에서 real한 headless-Chromium pass를 했다: `/case-studies`가 세 card 모두에 badge 스타일의 incident type을 보여주고; 각 detail page가 기존 narrative 위에 다섯 field 모두 real한 데이터로 채워진 Incident Summary card를 보여주며, mobile에서 overflow가 없다.
 
 ## In progress
 
@@ -101,9 +106,9 @@ Last updated: 2026-09-29
 
 ## Next
 
-1. 조율된 roadmap 항목 2–4: Case Study UX(case study별 "Incident Summary" card + visual-hierarchy pass), Experience TOC + cross-link, Architecture page diagram(손으로 만든 SVG 2~3개 — 새로 만드는 대신 Project visual layer의 `ArchitectureDiagram` primitive를 재사용). 아직 시작 안 함.
+1. 조율된 roadmap 항목 3–4: Experience TOC + cross-link, Architecture page diagram(손으로 만든 SVG 2~3개 — 새로 만드는 대신 Project visual layer의 `ArchitectureDiagram` primitive를 재사용). 아직 시작 안 함.
 2. ADR-0006 spec의 Phase 5: accessibility/performance/responsive 다듬기 pass. 아직 시작 안 함.
-3. Test suite를 넓힌다: `live-observability.test.ts`는 순수한 Prometheus-response parsing을 커버하지만, 아직 route-level smoke test는 없다(이제 `/`의 real한 콘텐츠, `/profile`과 `/lab`의 redirect, dashboard와 그 activity drill-down을 렌더링하는 `/lab/relayhub`, `/projects`의 diagram까지 포함) — 지금까지는 변경마다 브라우저 screenshot으로만 수동 검증했다.
+3. Test suite를 넓힌다: `live-observability.test.ts`는 순수한 Prometheus-response parsing을 커버하지만, 아직 route-level smoke test는 없다(이제 `/`의 real한 콘텐츠, `/profile`과 `/lab`의 redirect, dashboard와 그 activity drill-down을 렌더링하는 `/lab/relayhub`, `/projects`와 `/case-studies`의 새 component까지 포함) — 지금까지는 변경마다 브라우저 screenshot으로만 수동 검증했다.
 4. `vitest`/Node 버전 불일치를 해결하는 데 노력을 들일지(이 환경/CI의 Node를 ≥22로 올리고 `vitest@5`로 이동) `vitest@3.2.7`에 머물지 결정한다 — "Known constraints" 참고. (Note: `.github/workflows/deploy.yml`의 `node-version: 20`을 사용하는 GitHub Actions의 `actions/setup-node@v4`는 현재 Node 20.x patch release를 가져오며, 반드시 이 local 환경의 20.11.1과 같지는 않다 — 결정하기 전에 CI의 Node 20도 `styleText`가 없는지, 아니면 이것이 순전히 local-환경 제약인지 다시 확인할 가치가 있다.)
 5. dashboard가 시간이 지남에 따라 `relayhub-java`의 더 많은 사용 가능한 metric을 노출해야 하는지 고려한다 — 어떤 추가든 ADR-0004에 따라 해당 서비스에 대한 자체적이고 의도적인 CORS-allowlist entry가 필요하며, 포괄적인 grant는 안 된다.
 6. ~~동작하는 Python/`uv`/`pip` toolchain이 이 환경이나 CI에서 사용 가능해지면, real한 `specify init --here --integration claude --integration codex`를 실행한다~~ **완료 (2026-09-20, 이 항목이 미뤄졌던 V2 migration과 같은 날)** — 위의 "Completed" 참고. CLI가 생성한 install이 `.specify/memory/constitution.md`를 덮어쓰지 않고 그대로 두었으므로, 여기서 예상했던 조율 단계는 실제로는 필요하지 않았다.

@@ -3,6 +3,7 @@ import type { CaseStudy } from "@/content/types";
 export const distributedDeliveryRaceCondition: CaseStudy = {
   slug: "distributed-delivery-race-condition",
   title: "A Race Condition in Distributed Delivery Processing",
+  incidentType: "Race Condition",
   summary:
     "An asynchronous delivery pipeline occasionally left a downstream record in an inconsistent state when a delete and a create for the same logical entity raced each other. This is a composite, abstracted scenario representative of enterprise integration work — no real company, customer, or system names are used.",
   context:
