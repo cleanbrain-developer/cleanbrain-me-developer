@@ -34,6 +34,10 @@ export interface Profile {
 export interface Project {
   slug: string;
   name: string;
+  /** One-line category, e.g. "Event-driven Integration Platform" — extracted from `summary`/`problem`, not a new claim. */
+  kind: string;
+  /** One-line focus statement, e.g. "Reliability & Failure Handling" — same source as `kind`. */
+  focus: string;
   summary: string;
   status: "live" | "in-development";
   role: string;

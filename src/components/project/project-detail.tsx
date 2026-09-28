@@ -1,4 +1,29 @@
 import type { Project } from "@/content/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ArchitectureDiagram } from "@/components/project/architecture-diagram";
+import {
+  relayHubDiagramNodes,
+  relayHubDiagramEdges,
+  relayHubDiagramSize,
+} from "@/content/relayhub-architecture";
+import {
+  englishCoreSpeakingDiagramNodes,
+  englishCoreSpeakingDiagramEdges,
+  englishCoreSpeakingDiagramSize,
+} from "@/content/english-core-speaking-architecture";
+
+const DIAGRAMS: Record<
+  string,
+  { nodes: typeof relayHubDiagramNodes; edges: typeof relayHubDiagramEdges; size: { width: number; height: number } }
+> = {
+  relayhub: { nodes: relayHubDiagramNodes, edges: relayHubDiagramEdges, size: relayHubDiagramSize },
+  "english-core-speaking": {
+    nodes: englishCoreSpeakingDiagramNodes,
+    edges: englishCoreSpeakingDiagramEdges,
+    size: englishCoreSpeakingDiagramSize,
+  },
+};
 
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -20,6 +45,8 @@ function DetailList({ items }: { items: string[] }) {
 }
 
 export function ProjectDetail({ project }: { project: Project }) {
+  const diagram = DIAGRAMS[project.slug];
+
   return (
     <article>
       <header className="py-8">
@@ -27,41 +54,27 @@ export function ProjectDetail({ project }: { project: Project }) {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             {project.name}
           </h1>
-          <span className="rounded-full border border-border px-2 py-0.5 font-mono text-xs text-muted">
+          <Badge tone={project.status === "live" ? "live" : "default"}>
             {project.status === "live" ? "Live" : "In development"}
-          </span>
+          </Badge>
         </div>
+        <p className="mt-1 text-xs font-medium uppercase tracking-wide text-accent">
+          {project.kind} · {project.focus}
+        </p>
         <p className="mt-3 max-w-2xl text-muted">{project.summary}</p>
         <p className="mt-2 text-sm text-muted">Role: {project.role}</p>
         <div className="mt-4 flex flex-wrap gap-3">
-          {project.links.live ? (
-            <a
-              href={project.links.live}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:opacity-90"
-            >
-              View Live
-            </a>
-          ) : null}
+          {project.links.live ? <Button href={project.links.live}>View Live</Button> : null}
           {project.links.github ? (
-            <a
-              href={project.links.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface"
-            >
+            <Button href={project.links.github} variant="secondary">
               View Source
-            </a>
+            </Button>
           ) : null}
         </div>
         <ul className="mt-6 flex flex-wrap gap-2">
           {project.technologies.map((tech) => (
-            <li
-              key={tech}
-              className="rounded-full bg-surface px-2 py-1 font-mono text-xs text-muted"
-            >
-              {tech}
+            <li key={tech}>
+              <Badge>{tech}</Badge>
             </li>
           ))}
         </ul>
@@ -75,6 +88,17 @@ export function ProjectDetail({ project }: { project: Project }) {
       </DetailSection>
       <DetailSection title="Architecture">
         <p className="text-muted">{project.architecture}</p>
+        {diagram ? (
+          <div className="mt-4">
+            <ArchitectureDiagram
+              nodes={diagram.nodes}
+              edges={diagram.edges}
+              width={diagram.size.width}
+              height={diagram.size.height}
+              label={`${project.name} architecture diagram`}
+            />
+          </div>
+        ) : null}
       </DetailSection>
       <DetailSection title="Key engineering decisions">
         <DetailList items={project.keyDecisions} />

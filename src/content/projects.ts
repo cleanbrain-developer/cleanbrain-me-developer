@@ -4,6 +4,8 @@ export const projects: Project[] = [
   {
     slug: "relayhub",
     name: "RelayHub",
+    kind: "Event-driven Integration Platform",
+    focus: "Reliability & Failure Handling",
     summary:
       "An event-integration platform: events are ingested, validated, transformed, and delivered to downstream targets with retry, dead-letter handling, replay, and metrics — this site's Live Monitoring page reads its real, live delivery and DLQ data directly.",
     status: "live",
@@ -43,6 +45,8 @@ export const projects: Project[] = [
   {
     slug: "english-core-speaking",
     name: "English Core Speaking",
+    kind: "User-facing Learning SaaS",
+    focus: "Real-time Speaking Practice",
     summary:
       "A full-stack English speaking practice service: a NestJS backend and Vue 3 frontend, with OAuth-based sign-in and an external AI/LLM API integration for evaluating spoken responses.",
     status: "live",
