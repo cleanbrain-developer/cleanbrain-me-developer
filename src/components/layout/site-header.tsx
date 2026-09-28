@@ -4,7 +4,7 @@ import { Container } from "@/components/layout/container";
 const NAV_ITEMS = [
   { href: "/experience", label: "Experience" },
   { href: "/projects", label: "Projects" },
-  { href: "/lab", label: "Live" },
+  { href: "/lab/relayhub", label: "Live Systems" },
   { href: "/case-studies", label: "Case Studies" },
   { href: "/architecture", label: "Architecture" },
   { href: "/resume", label: "Resume" },
@@ -17,7 +17,7 @@ export function SiteHeader() {
       <Container>
         <div className="flex flex-wrap items-center justify-between gap-4 py-4">
           <Link
-            href="/profile"
+            href="/"
             className="font-mono text-sm font-semibold tracking-tight text-foreground"
           >
             cleanbrain.developer

@@ -46,7 +46,7 @@ export default function ContactPage() {
             title={profile.role}
             description={`${profile.yearsOfExperience}+ years across Java/Spring and TypeScript/Node.js/NestJS backend systems.`}
           />
-          <Link href="/profile" className="mt-4 inline-block text-sm text-accent hover:underline">
+          <Link href="/" className="mt-4 inline-block text-sm text-accent hover:underline">
             Full profile &rarr;
           </Link>
         </div>
@@ -60,7 +60,7 @@ export default function ContactPage() {
             <Link href="/resume" className="text-sm text-accent hover:underline">
               Resume — focus areas, tech stack &rarr;
             </Link>
-            <Link href="/lab" className="text-sm text-accent hover:underline">
+            <Link href="/lab/relayhub" className="text-sm text-accent hover:underline">
               RelayHub Live Monitoring — real production telemetry &rarr;
             </Link>
             <Link href="/case-studies" className="text-sm text-accent hover:underline">

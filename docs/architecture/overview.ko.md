@@ -4,7 +4,7 @@
 
 ## Architectural style
 
-developer.cleanbrain.me는 Next.js (App Router, TypeScript) 애플리케이션입니다. Server Component가 기본이며, Client Component는 interactivity가 필요한 곳(주로 `/lab/relayhub`, `/`의 redirect를 통한 사이트의 front door)에서만 사용됩니다. database도, custom backend server도 없으며 — ADR-0005 이후로는 — mock/simulation layer도 없습니다: `/lab/relayhub`는 relayhub-java의 실제 production telemetry를 직접 읽으며, 여기에는 live SSE stream(ADR-0004의 "Update")도 포함됩니다. ADR-0002(원래 build의 Phase 3–4)에서 나온 `RelayHubAdapter`/`MockRelayHubAdapter`/`HttpRelayHubAdapter` interface들은 완전히 제거되었습니다 — 이유는 ADR-0005 참고.
+developer.cleanbrain.me는 Next.js (App Router, TypeScript) 애플리케이션입니다. Server Component가 기본이며, Client Component는 interactivity가 필요한 곳에서만 사용됩니다 — `/lab/relayhub`(full RelayHub console)와, ADR-0006 이후 사이트의 front door 자체인 `/`에 직접 embed된 더 작은 live component `LiveSignal`(`/`는 이제 redirect가 아니라 real한 static 콘텐츠입니다). database도, custom backend server도 없으며 — ADR-0005 이후로는 — mock/simulation layer도 없습니다: `/lab/relayhub`와 `LiveSignal` 둘 다 relayhub-java의 실제 production telemetry를 직접 읽으며, 여기에는 live SSE stream(ADR-0004의 "Update")도 포함됩니다. ADR-0002(원래 build의 Phase 3–4)에서 나온 `RelayHubAdapter`/`MockRelayHubAdapter`/`HttpRelayHubAdapter` interface들은 완전히 제거되었습니다 — 이유는 ADR-0005 참고.
 
 ```text
 src/content/*.ts (profile, experience, projects, case studies)
@@ -38,15 +38,21 @@ relayhub-java's public REST + SSE endpoints (real, cross-origin, both)
 
 둘 다 adapter interface나 mock 구현이 없습니다 — 둘 다 상호교환 가능한 backend를 가진 시뮬레이션 파이프라인이 아니라, real system에 대한 단방향 read-only view입니다(이전의 `RelayHubAdapter`/`MockRelayHubAdapter`가 제거된 이유는 ADR-0005 참고).
 
+`/`에는 세 번째의 독립적인 consumer가 있습니다: `src/components/portfolio/live-signal.tsx`는 숫자·연결 상태·real node 이름을 위해 `live-observability.ts`의 `fetchRelayHubLiveObservability()`와 `live-topology.ts`의 `fetchTopology()`/`openLiveActivityStream()`을 재사용하지만, `live-topology.tsx`의 stateful pulse/explosion 애니메이션 엔진은 의도적으로 재사용하지 않습니다(ADR-0006의 "Alternatives considered" 참고).
+
+### UI primitives
+
+`src/components/ui/`(ADR-0006에서 추가)에는 작은 local, shadcn-ui 스타일의 presentational primitive 집합이 있습니다 — `Button`, `Badge`, `Card`(+ `CardLabel`/`CardValue`), `Separator`, `Skeleton`. 설치된 package가 아니라 평범한 파일이며, 다섯 개 모두 open/close state가 필요 없으므로 아직 Radix나 다른 새 dependency는 없습니다. 지금까지는 `/`와 header에서만 쓰이며, 다른 페이지는 자기 자신의 visual-hierarchy pass가 진행될 때만 retrofit됩니다(`docs/status/current-state.md`의 "Next" 참고).
+
 ### Presentation
 
-`src/components/`는 feature 영역(`layout/`, `navigation/`, `portfolio/`, `project/`, `case-study/`, `relayhub/live-observability/`)별로 구성됩니다. 실제 interactivity(polling, client-side refresh)가 필요한 component만 Client Component입니다.
+`src/components/`는 feature 영역(`layout/`, `navigation/`, `portfolio/`, `project/`, `case-study/`, `relayhub/live-observability/`, `ui/`)별로 구성됩니다. 실제 interactivity(polling, client-side refresh)가 필요한 component만 Client Component입니다.
 
 ## External integrations (외부 통합)
 
 `english-core-speaking`은 `/projects` 콘텐츠에서 나가는 link로만 참조됩니다 — 이 애플리케이션은 그 API를 호출하거나, session을 공유하거나, 그 runtime 가용성에 의존하지 않습니다.
 
-`relayhub-java`는 다릅니다 — load-bearing한, 이 사이트에서 가장 중요한 외부 의존성입니다: `/lab/relayhub`(`/`가 그쪽으로 redirect하므로 사이트의 front door)는 브라우저에서 직접 실제, public, read-only endpoint를 호출합니다 — 일회성 fetch(`/api/deliveries/summary`, `/api/targets`, `/api/subscriptions`, `/api/sources`, `/api/dlq/schedule`, `/api/metrics/query(_range)`)와 탭이 그 페이지에 머무는 동안 유지되는 지속적인 Server-Sent Events connection(`/api/live/stream`) 둘 다입니다. 이것은 real runtime dependency입니다: `relayhub-java`를 사용할 수 없으면 영향받는 component는 페이지를 crash시키는 대신 명시적인 error/retry state를 보여주지만, 그 서비스의 uptime과 정확한 API/metric-name/event-shape에 실제로 결합되어 있습니다(ADR-0004의 "Costs and risks"와 그 "Update" 참고).
+`relayhub-java`는 다릅니다 — load-bearing한, 이 사이트에서 가장 중요한 외부 의존성입니다: `/`(`LiveSignal`를 통해)와 `/lab/relayhub` 둘 다 브라우저에서 직접 실제, public, read-only endpoint를 호출합니다 — 일회성 fetch(`/api/deliveries/summary`, `/api/targets`, `/api/subscriptions`, `/api/sources`, `/api/dlq/schedule`, `/api/metrics/query(_range)`)와 지속적인 Server-Sent Events connection(`/api/live/stream`) — 각 페이지가 자기 자신의 connection을 열므로, 방문자가 둘 다 서로 다른 탭에 열어두면 SSE connection이 두 개 유지됩니다. 이것은 real runtime dependency입니다: `relayhub-java`를 사용할 수 없으면 영향받는 component는 페이지를 crash시키는 대신 명시적인 error/retry state(또는 `/`에서는 `Skeleton` loading state)를 보여주지만, 그 서비스의 uptime과 정확한 API/metric-name/event-shape에 실제로 결합되어 있습니다(ADR-0004의 "Costs and risks"와 그 "Update" 참고).
 
 ## Deployment target
 

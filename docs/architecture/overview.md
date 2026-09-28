@@ -2,7 +2,7 @@
 
 ## Architectural style
 
-developer.cleanbrain.me is a Next.js (App Router, TypeScript) application. Server Components are the default; Client Components are used only where interactivity is required (primarily `/lab/relayhub`, the site's front door via `/`'s redirect). There is no database and no custom backend server, and — since ADR-0005 — no mock/simulation layer either: `/lab/relayhub` reads relayhub-java's real production telemetry directly, including a live SSE stream (ADR-0004's "Update"). The `RelayHubAdapter`/`MockRelayHubAdapter`/`HttpRelayHubAdapter` interfaces from ADR-0002 (Phase 3–4 of the original build) were removed entirely — see ADR-0005 for why.
+developer.cleanbrain.me is a Next.js (App Router, TypeScript) application. Server Components are the default; Client Components are used only where interactivity is required — `/lab/relayhub` (the full RelayHub console) and `LiveSignal`, a smaller live component embedded directly on `/`, the site's front door itself since ADR-0006 (`/` is real static content, not a redirect). There is no database and no custom backend server, and — since ADR-0005 — no mock/simulation layer either: both `/lab/relayhub` and `LiveSignal` read relayhub-java's real production telemetry directly, including a live SSE stream (ADR-0004's "Update"). The `RelayHubAdapter`/`MockRelayHubAdapter`/`HttpRelayHubAdapter` interfaces from ADR-0002 (Phase 3–4 of the original build) were removed entirely — see ADR-0005 for why.
 
 ```text
 src/content/*.ts (profile, experience, projects, case studies)
@@ -36,15 +36,21 @@ relayhub-java's public REST + SSE endpoints (real, cross-origin, both)
 
 There is no adapter interface and no mock implementation for either: both are one-way, read-only views of a real system, not a simulated pipeline with interchangeable backends (see ADR-0005 for why the earlier `RelayHubAdapter`/`MockRelayHubAdapter` was removed).
 
+A third, independent consumer lives on `/`: `src/components/portfolio/live-signal.tsx` reuses `live-observability.ts`'s `fetchRelayHubLiveObservability()` and `live-topology.ts`'s `fetchTopology()`/`openLiveActivityStream()` for its numbers, connection status, and real node names, but deliberately does not reuse `live-topology.tsx`'s stateful pulse/explosion animation engine (see ADR-0006's "Alternatives considered").
+
+### UI primitives
+
+`src/components/ui/` (added in ADR-0006) holds a small set of local, shadcn-ui-style presentational primitives — `Button`, `Badge`, `Card` (+ `CardLabel`/`CardValue`), `Separator`, `Skeleton`. Plain files, not an installed package; no Radix or other new dependency yet, since none of these five need open/close state. Used by `/` and the header so far; other pages are retrofitted only as their own visual-hierarchy pass happens (see `docs/status/current-state.md`, "Next").
+
 ### Presentation
 
-`src/components/` is organized by feature area (`layout/`, `navigation/`, `portfolio/`, `project/`, `case-study/`, `relayhub/live-observability/`). Only components that need real interactivity (polling, client-side refresh) are Client Components.
+`src/components/` is organized by feature area (`layout/`, `navigation/`, `portfolio/`, `project/`, `case-study/`, `relayhub/live-observability/`, `ui/`). Only components that need real interactivity (polling, client-side refresh) are Client Components.
 
 ## External integrations
 
 `english-core-speaking` is referenced only as an outbound link from `/projects` content — this application never calls its API, shares sessions, or depends on its runtime availability.
 
-`relayhub-java` is different and load-bearing — the site's most important external dependency: `/lab/relayhub` (the site's front door, since `/` redirects there) calls its real, public, read-only endpoints directly from the browser, both a one-time fetch (`/api/deliveries/summary`, `/api/targets`, `/api/subscriptions`, `/api/sources`, `/api/dlq/schedule`, `/api/metrics/query(_range)`) and a persistent Server-Sent Events connection (`/api/live/stream`) held open for as long as the tab stays on that page. This is a real runtime dependency: if `relayhub-java` is unavailable, the affected component shows an explicit error/retry state rather than crashing the page, but it is genuinely coupled to that service's uptime and exact API/metric-name/event-shape (see ADR-0004's "Costs and risks" and its "Update").
+`relayhub-java` is different and load-bearing — the site's most important external dependency: both `/` (via `LiveSignal`) and `/lab/relayhub` call its real, public, read-only endpoints directly from the browser, a one-time fetch (`/api/deliveries/summary`, `/api/targets`, `/api/subscriptions`, `/api/sources`, `/api/dlq/schedule`, `/api/metrics/query(_range)`) and a persistent Server-Sent Events connection (`/api/live/stream`) — each page opens its own, so a visitor with both open in different tabs holds two SSE connections. This is a real runtime dependency: if `relayhub-java` is unavailable, the affected component shows an explicit error/retry state (or, on `/`, its `Skeleton` loading state) rather than crashing the page, but it is genuinely coupled to that service's uptime and exact API/metric-name/event-shape (see ADR-0004's "Costs and risks" and its "Update").
 
 ## Deployment target
 

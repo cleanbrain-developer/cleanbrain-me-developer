@@ -38,10 +38,10 @@ export default function ProjectsPage() {
         />
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
-            href="/lab"
+            href="/lab/relayhub"
             className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:opacity-90"
           >
-            Open Live Monitoring
+            Open RelayHub Live
           </Link>
           <Link
             href="/case-studies"

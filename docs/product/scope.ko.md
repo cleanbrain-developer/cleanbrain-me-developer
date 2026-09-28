@@ -5,7 +5,7 @@
 ## V1 in scope (P0)
 
 - App shell, navigation, layout, dark-first theme, 공통 component.
-- `/`는 `/lab/relayhub`로 redirect한다(client-side, ADR-0003의 static-export 제약 기준) — RelayHub Live Monitoring dashboard가 front door이며, 포트폴리오 narrative가 아니다. 이전 홈페이지 콘텐츠(hero, engineering focus, featured projects, live monitoring teaser, selected case studies, architecture/platform snapshot, resume/contact)는 대신 `/profile`에 있으며, header logo를 통해 도달할 수 있다.
+- `/`가 front door다(ADR-0006): 짧은 identity hero, `LiveSignal` component(real한 RelayHub 숫자 + 축약된 topology preview), 그리고 예전 `/profile` 포트폴리오 narrative(impact, featured projects, engineering focus, selected case studies, architecture/platform snapshot, resume/contact)를 하나의 페이지에 결합한 real한 static 콘텐츠이며, header logo를 통해 도달할 수 있다. `/profile`과 `/lab`은 이제 각각 `/`와 `/lab/relayhub`로 가는 thin한 client-side redirect다(ADR-0003의 static-export 제약 기준) — 오래된 링크가 404 나지 않도록 유지될 뿐이다; header의 "Live Systems" nav 항목은 `/lab/relayhub`를 직접 가리킨다.
 - `/projects`와 `/projects/relayhub`, `/projects/english-core-speaking`(route와 content schema; content는 얇게 시작할 수 있지만, 조작된 결과는 없다).
 - `/lab/relayhub`: `LiveDashboard` — `relayhub-java`로부터 직접 읽는 real하고 live한 production telemetry(delivery summary, DLQ count, targets, ingress-rate와 delivery-outcome sparkline)로, 10초마다 자동으로 refresh된다(ADR-0004 참고). 이 사이트에는 이제 합성/mock 시뮬레이션이 없다 — 원래의 interactive Mock Lab(Event Generator, Live Pipeline, mock Metrics, Recent Events, Event Detail, DLQ Replay)이 왜 제거되었는지는 ADR-0005 참고.
 - 최소 하나의 real한 `/case-studies/[slug]` entry, 회사/고객 정보는 추상화됨.
