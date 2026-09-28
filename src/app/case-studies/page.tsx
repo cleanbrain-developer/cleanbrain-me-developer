@@ -27,7 +27,7 @@ export default function CaseStudiesPage() {
       </section>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {caseStudies.map((caseStudy) => (
-          <CaseStudyCard key={caseStudy.slug} caseStudy={caseStudy} />
+          <CaseStudyCard key={caseStudy.slug} caseStudy={caseStudy} headingLevel="h2" />
         ))}
       </div>
 

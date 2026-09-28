@@ -3,12 +3,20 @@ import type { Project } from "@/content/types";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({
+  project,
+  headingLevel = "h3",
+}: {
+  project: Project;
+  /** The page this card is rendered on decides the level, so the heading order never skips a level. */
+  headingLevel?: "h2" | "h3";
+}) {
+  const Heading = headingLevel;
   return (
     <Link href={`/projects/${project.slug}`} className="block">
       <Card className="transition-colors hover:bg-surface-hover">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-base font-semibold text-foreground">{project.name}</h3>
+          <Heading className="text-base font-semibold text-foreground">{project.name}</Heading>
           <Badge tone={project.status === "live" ? "live" : "default"}>
             {project.status === "live" ? "Live" : "In development"}
           </Badge>

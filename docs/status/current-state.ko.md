@@ -2,7 +2,7 @@
 
 # Current State
 
-Last updated: 2026-09-29 (Architecture 페이지 다이어그램)
+Last updated: 2026-09-29 (Phase 5: accessibility 다듬기)
 
 ## Current phase
 
@@ -109,6 +109,10 @@ Last updated: 2026-09-29 (Architecture 페이지 다이어그램)
   - "Observability as part of the design": 새 `src/content/observability-flow.ts` — `Actuator → Prometheus → Metrics Proxy → This Site` — `relayhub-java`의 real한 `MetricsController.java`와 `cleanbrain-me-infra`의 README(`kubernetes/apps/relayhub-java/prometheus/`)를 대조해 작성 전에 검증했고, 추측이 아니다: Prometheus는 public hostname이 없고, `relayhub-java`의 API만 거기에 말을 걸며, 이 사이트는 그 API에만 말을 건다(ADR-0004에 따라 CORS로 scoped됨).
   - 나머지 세 principle(Idempotency/ordering, Evidence over simulation, Batch vs. real-time)은 여전히 prose-only다 — 자연스러운 flow-diagram 모양이 없다. 페이지의 intro 문장을 "Not a diagram gallery"에서 "Not just a diagram gallery... illustrated where a picture clarifies the shape faster than prose"로 부드럽게 바꿔서 이제 세 section에 다이어그램이 생긴 후에도 정확하게 유지되도록 했다.
   - 검증됨: `npm run lint`/`test`/`build` 모두 통과한다. desktop(1440px)과 mobile(390px)에서 real한 headless-Chromium pass를 했다: 세 다이어그램 모두 legible하게 렌더링되고(fixed-width + `overflow-x-auto`, `/projects/[slug]`가 이미 하는 것과 같은 trade-off), 두 viewport 모두에서 horizontal page overflow가 없으며, `/projects/relayhub`의 기존 다이어그램은 변경 없이 렌더링된다(공유된 content module, 거기서 여전히 정확히 하나의 다이어그램 `<svg>`임을 확인).
+- **ADR-0006 Phase 5(accessibility/performance/responsive 다듬기)를 구현했다** — ADR-0006을 완전히 마무리한다. 범용적인 sweep을 하는 대신 실제 codebase를 먼저 조사했다(contrast 계산, heading-hierarchy grep, 기존 reduced-motion/focus-visible coverage, `aria-live` 사용 여부, build output) — 추측하거나 불필요한 busywork로 채우는 대신 real한 gap을 찾기 위해서다.
+  - **real한 fix 두 개**: (1) `/projects`와 `/case-studies`는 `<h1>` → card `<h3>` 구조였고 그 사이에 `<h2>`가 없었다(`ProjectCard`/`CaseStudyCard`가 `<h3>`를 하드코딩했음; 홈페이지에서 같은 card를 쓰는 곳은 이미 `SectionHeading`의 `<h2>` 아래에 있어서 올바른 상태였다) — 선택적 `headingLevel?: "h2" | "h3"` prop을 추가했고(기본값 `"h3"`라서 홈페이지는 변경이 필요 없었다), 두 index page에는 `headingLevel="h2"`를 전달했다. (2) `LiveDashboard`(`src/components/relayhub/live-observability/live-dashboard.tsx`)가 10초마다 KPI 숫자 네 개를 업데이트하는데도 codebase 어디에도 `aria-live` region이 없었다 — 전체 card가 아니라 stat-tile grid에만 `aria-live="polite"`/`aria-atomic="false"`를 추가해서, refresh마다 button/link/sparkline까지 다시 announce하지 않도록 했다.
+  - **확인했고 이미 괜찮았던 것들, 불필요한 변경으로 "고치지" 않음**: contrast(실제 token 값을 `--background`에 대해 real한 WCAG relative-luminance ratio로 계산 — `--muted` ≈ 7.6:1, `--accent` ≈ 6.0:1, Tailwind의 `red-400` danger text ≈ 7.0:1, 모두 AA의 4.5:1을 여유 있게 통과); `prefers-reduced-motion`(`globals.css`의 기존 Phase 1 범용 `*`/`*::before`/`*::after` rule이 이미 Tailwind의 `animate-ping`/`animate-pulse`와 `LiveTopology`의 CSS-keyframe pulse를 무력화한다 — 둘 다 평범한 CSS `animation`/`transition` property이기 때문); `<html lang="en">`(Phase 1부터 이미 설정됨); Recent Activity table의 clickable row(ADR-0004의 2026-09-29 Update부터 이미 `role="button"`/`tabIndex={0}`/`Enter`+`Space` keydown); `Sheet`의 focus trap/return(`@radix-ui/react-dialog`에 native로 내장); `LiveTopology`의 animated SVG(이미 `role="img"`와 static `aria-label`을 가지고 있어서, 끊임없이 애니메이션되는 pulse를 개별적으로 screen-reader-legible하게 만들려는 시도 대신 하나의 opaque image로 올바르게 취급된다 — 같은 데이터는 `LiveDashboard`에 real한 DOM text로 별도로 존재하며, 위의 `aria-live` fix가 실제로 도움 되는 곳이 바로 거기다); performance(static export, image 없음, 작은 Radix dependency 하나, `next build` output에 특별한 것 없음).
+  - 검증됨: `npm run lint`/`test`/`build` 모두 통과한다. local static export에 대한 real한 headless-Chromium pass로 `/projects`와 `/case-studies`에서 올바른 heading sequence(`H1 → H2`, skip 없음)를 확인했고, `LiveDashboard`의 source에 `aria-live="polite"`가 있음을 확인했다(그 data-driven branch는 `localhost`에서 렌더링될 수 없다 — `relayhub-java`의 CORS가 ADR-0004에 따라 real한 production origin으로 scoped되어 있기 때문 — 이번 세션의 다른 RelayHub-관련 변경과 마찬가지로 배포 후 production에서 live로 확인했다). 390px에서 여덟 개 주요 route(`/`, `/experience`, `/projects`, `/case-studies`, `/architecture`, `/lab/relayhub`, `/resume`, `/contact`) 전체에 대한 최종 responsive sweep을 했다: 어떤 route에도 horizontal overflow가 없다. 이 local sweep 중 관찰된 console "error"는 `npx serve`의 범용 static routing이 Next의 client-side RSC-prefetch request(`__PAGE__.txt`)와 맞지 않는 것으로 확인됐다 — static export를 평범한 file server로 local 테스트할 때 나타나는 알려진 artifact이며, 이 변경과 무관하고 production에는 존재하지 않는다(production은 `Dockerfile`의 nginx와 그 자체 `try_files` rule 뒤에서 동작한다 — 위 "Deployment prep" 참고).
 
 ## In progress
 
@@ -116,7 +120,7 @@ Last updated: 2026-09-29 (Architecture 페이지 다이어그램)
 
 ## Next
 
-1. 조율된 UX-spec roadmap(Project visual layer, Case Study UX, Experience TOC + cross-link, Architecture 페이지 다이어그램)은 이제 완전히 끝났다. 남은 것: ADR-0006 spec의 Phase 5 — accessibility/performance/responsive 다듬기 pass. 아직 시작 안 함.
+1. ADR-0006(그것이 흡수한 조율된 roadmap을 포함한 전체 5-phase UX/UI refinement)은 이제 완전히 끝났다. 현재 계획된 추가 UX/UI 작업은 없다 — 앞으로의 visual 변경은 이 ADR을 다시 여는 대신 새 ADR로 시작할 것이다.
 2. Test suite를 넓힌다: `live-observability.test.ts`는 순수한 Prometheus-response parsing을 커버하지만, 아직 route-level smoke test는 없다(이제 `/`의 real한 콘텐츠, `/profile`과 `/lab`의 redirect, dashboard와 그 activity drill-down을 렌더링하는 `/lab/relayhub`, `/projects`, `/case-studies`, `/experience`, `/architecture`의 새 component까지 포함) — 지금까지는 변경마다 브라우저 screenshot으로만 수동 검증했다.
 3. `vitest`/Node 버전 불일치를 해결하는 데 노력을 들일지(이 환경/CI의 Node를 ≥22로 올리고 `vitest@5`로 이동) `vitest@3.2.7`에 머물지 결정한다 — "Known constraints" 참고. (Note: `.github/workflows/deploy.yml`의 `node-version: 20`을 사용하는 GitHub Actions의 `actions/setup-node@v4`는 현재 Node 20.x patch release를 가져오며, 반드시 이 local 환경의 20.11.1과 같지는 않다 — 결정하기 전에 CI의 Node 20도 `styleText`가 없는지, 아니면 이것이 순전히 local-환경 제약인지 다시 확인할 가치가 있다.)
 4. dashboard가 시간이 지남에 따라 `relayhub-java`의 더 많은 사용 가능한 metric을 노출해야 하는지 고려한다 — 어떤 추가든 ADR-0004에 따라 해당 서비스에 대한 자체적이고 의도적인 CORS-allowlist entry가 필요하며, 포괄적인 grant는 안 된다.

@@ -110,7 +110,11 @@ export function LiveDashboard() {
         </div>
       ) : data ? (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div
+            className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4"
+            aria-live="polite"
+            aria-atomic="false"
+          >
             <StatTile label="Succeeded" value={data.summary.succeeded.toLocaleString()} />
             <StatTile label="Pending" value={data.summary.pending.toLocaleString()} />
             <StatTile
