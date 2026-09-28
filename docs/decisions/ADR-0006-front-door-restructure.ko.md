@@ -46,3 +46,10 @@ maintainer의 후속 검토(상세한 UX/UI 개선 spec)에서, 실제 결과가
 ### `/`는 redirect로 유지하되, `/lab/relayhub` 대신 새로운 통합 페이지를 가리키게 하기
 
 `/profile`/`/lab`의 routing을 전혀 건드리지 않았을 것입니다. 기각: `output: "export"`(ADR-0003) 하에서는 redirect가 여기서 얻는 게 없습니다 — 빠르게 만들 server-side redirect가 애초에 없고, `/`가 자체적으로 보여줄 real 콘텐츠를 갖게 된 이상 이는 crawler/no-JS client에 대한 콘텐츠 가시성을 아무 이득 없이 희생시키는 것입니다.
+
+## Update (2026-09-29): RelayHub activity drill-down을 위해 Radix가 도입되다
+
+이 ADR의 "Costs and risks"는 다섯 개의 `src/components/ui/` primitive(`Button`/`Badge`/`Card`/`Separator`/`Skeleton`)가 "Dialog/Sheet가 필요해지는 나중 phase까지" Radix 없이 유지될 것이라고 예상했습니다. 그 phase가 바로 RelayHub Live activity drill-down입니다(ADR-0004 자체의 2026-09-29 Update 참고 — 같은 날 있었던 우회로도 포함해서: 첫 시도가 빌드됐다가, `relayhub-java`의 진짜 이전 이유로 admin-gate된 endpoint에 의존한다는 게 발견돼서 출시 전에 되돌려졌고, 이후 maintainer가 `relayhub-java` 쪽에서 그 endpoint를 다시 열어서 실제로 이걸 unblock했습니다): `/lab/relayhub`의 Recent Activity table에서 delivery row를 클릭하면 이제 `Sheet`가 열립니다.
+
+- 이 repository의 첫 Radix dependency로 `@radix-ui/react-dialog`를 추가했으며, `src/components/ui/sheet.tsx`(Root/Trigger/Portal/Overlay/Content/Close/Title/Description, 이 사이트의 token으로 재스타일링됨)로 wrapping했습니다 — 처음 다섯 개의 primitive가 사용한 것과 같은 shadcn 스타일의 "primitive를 복사해서 넣되, 전체 library를 설치하지는 않는다" 접근이며, 단지 이번엔 slide-in panel이 실제로 필요로 하는 focus-trap/Escape/aria 연결을 위해 그 아래에 Radix가 있을 뿐입니다.
+- 이번 변경에서 다른 어떤 primitive도 Radix dependency를 얻지 않았습니다 — `Button`/`Badge`/`Card`/`Separator`/`Skeleton`은 변경되지 않았습니다. 다음 Radix 기반 추가는(만약 있다면) 같은 방식으로 진행됩니다: 구체적인 페이지가 실제로 필요로 할 때만.

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityDetailSheet } from "@/components/relayhub/live-observability/activity-detail-sheet";
 import {
   fetchDeliverySummary,
   fetchDlqSchedule,
@@ -151,6 +152,7 @@ export function LiveTopology() {
   const [connected, setConnected] = useState(false);
   const [feed, setFeed] = useState<RelayHubLiveEvent[]>([]);
   const [loadError, setLoadError] = useState<string>();
+  const [selectedEvent, setSelectedEvent] = useState<(RelayHubLiveEvent & { attemptId: string }) | null>(null);
 
   const [renderedPulses, setRenderedPulses] = useState<(Pulse & { progress: number })[]>([]);
   const pulsesRef = useRef<Pulse[]>([]);
@@ -647,34 +649,55 @@ export function LiveTopology() {
               </tr>
             </thead>
             <tbody>
-              {feed.map((e, i) => (
-                <tr key={i} className="border-b border-border last:border-0">
-                  <td className="px-3 py-2">
-                    {e.stage}
-                    {e.replay ? <span className="ml-1 text-xs text-amber-400">(replay)</span> : null}
-                  </td>
-                  <td className="px-3 py-2 text-muted">{e.sourceKey}</td>
-                  <td className="px-3 py-2 text-muted">{e.targetKey ?? "–"}</td>
-                  <td className="px-3 py-2">
-                    {e.status ? (
-                      <span
-                        className={
-                          e.status === "success"
-                            ? "text-emerald-400"
-                            : e.status === "dead"
-                              ? "text-muted"
-                              : "text-red-400"
-                        }
-                      >
-                        {e.status}
-                      </span>
-                    ) : (
-                      "–"
-                    )}
-                  </td>
-                  <td className="px-3 py-2 text-muted">{new Date(e.at).toLocaleTimeString()}</td>
-                </tr>
-              ))}
+              {feed.map((e, i) => {
+                const drillable = e.stage === "delivery" && e.attemptId !== null;
+                return (
+                  <tr
+                    key={i}
+                    role={drillable ? "button" : undefined}
+                    tabIndex={drillable ? 0 : undefined}
+                    onClick={drillable ? () => setSelectedEvent(e as typeof e & { attemptId: string }) : undefined}
+                    onKeyDown={
+                      drillable
+                        ? (event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedEvent(e as typeof e & { attemptId: string });
+                            }
+                          }
+                        : undefined
+                    }
+                    className={`border-b border-border last:border-0${
+                      drillable ? " cursor-pointer hover:bg-surface-hover focus-visible:bg-surface-hover" : ""
+                    }`}
+                  >
+                    <td className="px-3 py-2">
+                      {e.stage}
+                      {e.replay ? <span className="ml-1 text-xs text-amber-400">(replay)</span> : null}
+                    </td>
+                    <td className="px-3 py-2 text-muted">{e.sourceKey}</td>
+                    <td className="px-3 py-2 text-muted">{e.targetKey ?? "–"}</td>
+                    <td className="px-3 py-2">
+                      {e.status ? (
+                        <span
+                          className={
+                            e.status === "success"
+                              ? "text-emerald-400"
+                              : e.status === "dead"
+                                ? "text-muted"
+                                : "text-red-400"
+                          }
+                        >
+                          {e.status}
+                        </span>
+                      ) : (
+                        "–"
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-muted">{new Date(e.at).toLocaleTimeString()}</td>
+                  </tr>
+                );
+              })}
               {feed.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-3 py-4 text-center text-muted">
@@ -686,6 +709,8 @@ export function LiveTopology() {
           </table>
         </div>
       </div>
+
+      <ActivityDetailSheet event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   );
 }

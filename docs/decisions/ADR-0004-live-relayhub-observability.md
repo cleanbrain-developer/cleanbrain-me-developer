@@ -57,3 +57,20 @@ The first version of this ADR shipped `LiveObservabilityPanel` — KPI tiles and
 - `LiveObservabilityPanel`'s KPI tiles and sparklines were **not deleted** — renamed/kept as `LiveDashboard`, now a secondary "Aggregate stats" section below `LiveTopology` on the same page. The topology animation is the primary, attention-grabbing view; the dashboard remains for anyone who wants trend/summary numbers rather than watching individual events fly by.
 
 **Additional cost this update accepts:** the topology view depends on more of `relayhub-java`'s surface than before (`/api/sources`, `/api/subscriptions`, `/api/dlq/schedule`, plus the SSE event shape itself), and holds one open `EventSource` connection per visiting tab for as long as the tab is open — a real, if currently small, persistent-connection load on `relayhub-java` that a plain polling dashboard did not create.
+
+## Update (2026-09-29): click-through request/response detail, after all
+
+The previous update's "Decision, extended" explicitly excluded click-through detail on the activity feed. Two follow-up UX-review specs both asked for exactly that — a drill-down on Recent Activity rows.
+
+The first attempt at this the same day discovered that `relayhub-java`'s attempt-detail fields (`DeliveryAttemptResponse`'s request/response/error, and the full per-delivery retry history via `GET /api/deliveries/{deliveryId}/attempts`) were `hasRole("ADMIN")`-gated on that service, not just uncovered by CORS — a real, prior security decision there (2026-09-17: an Attempt carries actual request/response payload content, not just outcome metadata). A CORS entry alone doesn't grant access, and a public site can't authenticate as admin without embedding a credential client-side, so that attempt was reverted the same day, on both repos, before shipping.
+
+The maintainer then made a deliberate call on `relayhub-java`'s side: every Source/Target attached to that deployment is, and will remain, a demo system under `relayhub-demo-systems` generating synthetic traffic only — there is no real target integration to protect, so the admin gate was reopened as public (see `relayhub-java`'s `docs/status/current-state.md`, 2026-09-29, and `SecurityConfig.java`'s explicit "revisit if a real Target is ever connected" note).
+
+**Decision, extended again:**
+
+- Added a click-to-open `Sheet` (`src/components/relayhub/live-observability/activity-detail-sheet.tsx`) on any `"delivery"`-stage row in `LiveTopology`'s Recent Activity table (rows with an `attemptId`; `"ingress"`/`"dlq"` rows have none and stay non-interactive). Shows the clicked attempt's real request method/URL/body, HTTP status, response body, and error message, plus the delivery's full real retry history — not a fabricated stage timeline.
+- CORS on `relayhub-java`: added `/api/delivery-attempts/**` (same bean, same origin, still `GET`-only). `GET /api/deliveries/{deliveryId}/attempts` needed no new entry — already covered by the existing `/api/deliveries/**`.
+- Introduced this repository's first Radix-based UI primitive (`@radix-ui/react-dialog`, wrapped as `src/components/ui/sheet.tsx`) specifically for this — ADR-0006 anticipated Radix arriving exactly when a Dialog/Sheet was actually needed, and this is that moment.
+- Two fields the underlying specs also asked for (a trace/correlation id, per-attempt latency) do **not** exist on `relayhub-java` today, regardless of the auth question, and were **not** added to the frontend — see `docs/relayhub-observability-gap.md` for what's missing and what adding it would take, rather than inventing either in this app.
+
+This does not reopen `relayhub-java`'s admin write boundary — every new call from this site is still a `GET` against a now-intentionally-public endpoint. The security decision itself (whether Attempt data should be public) belongs to `relayhub-java`, not to this repository; this ADR records that this site now depends on that endpoint being public, and why.

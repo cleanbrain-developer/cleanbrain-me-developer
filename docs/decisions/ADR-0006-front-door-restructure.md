@@ -44,3 +44,10 @@ More elegant, more code reuse. Rejected for this change: `live-topology.tsx` is 
 ### Keep `/` as a redirect, just point it at a new combined page instead of `/lab/relayhub`
 
 Would have avoided touching `/profile`/`/lab`'s routing at all. Rejected: `output: "export"` (ADR-0003) means a redirect earns nothing here — there's no server-side redirect to speed up, and it costs real content visibility to crawlers/no-JS clients for no benefit once `/` has real content of its own to serve directly.
+
+## Update (2026-09-29): Radix arrives, for the RelayHub activity drill-down
+
+This ADR's "Costs and risks" anticipated that the five `src/components/ui/` primitives (`Button`/`Badge`/`Card`/`Separator`/`Skeleton`) would stay Radix-free "until whichever later phase needs a Dialog/Sheet." That phase is the RelayHub Live activity drill-down (see ADR-0004's own 2026-09-29 Update — including a same-day detour where a first attempt at this was built, found to depend on a `relayhub-java` endpoint that was admin-gated for a real prior reason, and reverted before shipping; the maintainer then reopened that endpoint on `relayhub-java`'s side, which is what actually unblocked this): clicking a delivery row in `/lab/relayhub`'s Recent Activity table now opens a `Sheet`.
+
+- Added `@radix-ui/react-dialog` as this repository's first Radix dependency, wrapped as `src/components/ui/sheet.tsx` (Root/Trigger/Portal/Overlay/Content/Close/Title/Description, restyled to this site's tokens) — the same shadcn-style "copy the primitive in, don't install the whole library" approach the first five primitives used, just with Radix underneath this one for the focus-trap/Escape/aria wiring a slide-in panel genuinely needs.
+- No other primitive gained a Radix dependency in this change — `Button`/`Badge`/`Card`/`Separator`/`Skeleton` are unchanged. The next Radix-based addition (if any) happens the same way: only when a concrete page needs it.

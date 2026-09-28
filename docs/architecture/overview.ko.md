@@ -33,7 +33,7 @@ relayhub-java's public REST + SSE endpoints (real, cross-origin, both)
 
 `src/lib/relayhub/`는 남아 있는 유일한 RelayHub 관련 domain code이며, 하나가 아니라 두 개의 독립적인 real(mock이 아닌) 통합입니다.
 
-- `live-topology.ts` + `live-topology.tsx`: 눈길을 끄는 주요 view입니다. `relayhub-java`의 `/api/live/stream`에 대해 실제 cross-origin `EventSource`를 열고 애니메이션이 적용된 Source → Event → RelayHub → Target diagram(pulse, impact explosion, node-hit shake)을 렌더링합니다 — 해당 repo 자체 admin-console의 Live 페이지(`frontend/src/pages/LivePage.tsx`)를 이 사이트의 테마로 재색상화하여 이식(port)한 것입니다. 또한 diagram을 배치하고 DLQ countdown을 구동하기 위해 mount 시 한 번 `/api/sources`, `/api/subscriptions`, `/api/dlq/schedule`을 fetch합니다. ADR-0004의 "Update (2026-09-13)" 참고.
+- `live-topology.ts` + `live-topology.tsx`: 눈길을 끄는 주요 view입니다. `relayhub-java`의 `/api/live/stream`에 대해 실제 cross-origin `EventSource`를 열고 애니메이션이 적용된 Source → Event → RelayHub → Target diagram(pulse, impact explosion, node-hit shake)을 렌더링합니다 — 해당 repo 자체 admin-console의 Live 페이지(`frontend/src/pages/LivePage.tsx`)를 이 사이트의 테마로 재색상화하여 이식(port)한 것입니다. 또한 diagram을 배치하고 DLQ countdown을 구동하기 위해 mount 시 한 번 `/api/sources`, `/api/subscriptions`, `/api/dlq/schedule`을 fetch합니다. ADR-0004의 "Update (2026-09-13)" 참고. Recent Activity table의 `"delivery"` stage row는 클릭 가능하며, `activity-detail-sheet.tsx`(`Sheet`, 아래 "UI primitives" 참고)를 `fetchDeliveryAttempt()`/`fetchDeliveryAttempts()`를 통해 연다 — 해당 attempt의 real한 request/response/error 상세와 재시도 이력이다. ADR-0004의 "Update (2026-09-29)"와 `docs/relayhub-observability-gap.md`(이게 의도적으로 보여주지 않는 것) 참고.
 - `live-observability.ts` + `live-dashboard.tsx`: topology 아래의 보조 "Aggregate stats" section입니다. `relayhub-java`의 delivery-summary와 Prometheus 기반 metrics endpoint를 10초마다 polling하여 KPI tile과 `Sparkline`(`sparkline.tsx`, 별도 의존성 없이 inline-SVG로 만든 작은 line chart — charting library 미사용)을 렌더링합니다. `parseInstantValue`/`parseRangeSeries`는 Prometheus의 JSON response 형태를 이 앱의 type으로 재구성하는 순수하고 unit-test된 함수입니다.
 
 둘 다 adapter interface나 mock 구현이 없습니다 — 둘 다 상호교환 가능한 backend를 가진 시뮬레이션 파이프라인이 아니라, real system에 대한 단방향 read-only view입니다(이전의 `RelayHubAdapter`/`MockRelayHubAdapter`가 제거된 이유는 ADR-0005 참고).
@@ -42,7 +42,7 @@ relayhub-java's public REST + SSE endpoints (real, cross-origin, both)
 
 ### UI primitives
 
-`src/components/ui/`(ADR-0006에서 추가)에는 작은 local, shadcn-ui 스타일의 presentational primitive 집합이 있습니다 — `Button`, `Badge`, `Card`(+ `CardLabel`/`CardValue`), `Separator`, `Skeleton`. 설치된 package가 아니라 평범한 파일이며, 다섯 개 모두 open/close state가 필요 없으므로 아직 Radix나 다른 새 dependency는 없습니다. 지금까지는 `/`와 header에서만 쓰이며, 다른 페이지는 자기 자신의 visual-hierarchy pass가 진행될 때만 retrofit됩니다(`docs/status/current-state.md`의 "Next" 참고).
+`src/components/ui/`(ADR-0006에서 추가)에는 작은 local, shadcn-ui 스타일의 presentational primitive 집합이 있습니다 — `Button`, `Badge`, `Card`(+ `CardLabel`/`CardValue`), `Separator`, `Skeleton`, `Sheet`(+ `SheetTitle`/`SheetDescription`/`SheetClose`). 설치된 package가 아니라 평범한 파일입니다. `Sheet`를 제외한 모두는 open/close state나 focus trapping이 필요 없습니다; `Sheet`는 `@radix-ui/react-dialog` 위에 만들어졌습니다(이 repo의 첫 Radix dependency이며, RelayHub activity drill-down을 위해 구체적으로 추가됐습니다 — ADR-0004의 2026-09-29 Update 참고), shadcn의 기본값이 아니라 이 사이트 자체의 token으로 재스타일링됐습니다. 지금까지는 `/`, header, `/lab/relayhub`의 activity drill-down에서 쓰이며, 다른 페이지는 자기 자신의 visual-hierarchy pass가 진행될 때만 retrofit됩니다(`docs/status/current-state.md`의 "Next" 참고).
 
 ### Presentation
 

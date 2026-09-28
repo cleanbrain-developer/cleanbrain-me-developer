@@ -50,6 +50,30 @@ export interface RelayHubLiveEvent {
   at: string;
 }
 
+/**
+ * A single delivery attempt's full detail, exactly as relayhub-java's
+ * DeliveryAttemptResponse DTO returns it (public since 2026-09-29 -- every
+ * Source/Target attached to that deployment is a demo system generating
+ * synthetic traffic, so there is no real payload to protect). No traceId or
+ * latency field exists on the backend, so none is invented here.
+ */
+export interface RelayHubDeliveryAttempt {
+  id: string;
+  deliveryId: string;
+  eventId: string;
+  subscriptionId: string;
+  targetId: string;
+  attemptNumber: number;
+  status: "SUCCESS" | "FAILED";
+  requestMethod: string;
+  requestUrl: string;
+  requestBody: string | null;
+  httpStatus: number | null;
+  responseBody: string | null;
+  errorMessage: string | null;
+  attemptedAt: string;
+}
+
 async function getJson<T>(path: string): Promise<T> {
   const response = await fetch(`${RELAYHUB_JAVA_BASE_URL}${path}`);
   if (!response.ok) throw new Error(`${path} failed: ${response.status}`);
@@ -62,6 +86,16 @@ export async function fetchDlqSchedule(): Promise<RelayHubDlqSchedule> {
 
 export async function fetchDeliverySummary(): Promise<RelayHubDeliverySummary> {
   return getJson<RelayHubDeliverySummary>("/api/deliveries/summary");
+}
+
+/** A single attempt's full request/response/error detail. */
+export async function fetchDeliveryAttempt(attemptId: string): Promise<RelayHubDeliveryAttempt> {
+  return getJson<RelayHubDeliveryAttempt>(`/api/delivery-attempts/${attemptId}`);
+}
+
+/** The full, real retry history for one delivery, oldest attempt first. */
+export async function fetchDeliveryAttempts(deliveryId: string): Promise<RelayHubDeliveryAttempt[]> {
+  return getJson<RelayHubDeliveryAttempt[]>(`/api/deliveries/${deliveryId}/attempts`);
 }
 
 export async function fetchTopology(): Promise<{

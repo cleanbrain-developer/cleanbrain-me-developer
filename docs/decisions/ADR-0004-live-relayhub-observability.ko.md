@@ -59,3 +59,20 @@ Rejected: 이 사이트는 의도적인 선택으로 server가 없는 static exp
 - `LiveObservabilityPanel`의 KPI tile과 sparkline은 **삭제되지 않았다** — `LiveDashboard`로 이름이 바뀌어 유지되었으며, 이제 같은 페이지의 `LiveTopology` 아래에 있는 보조 "Aggregate stats" section이다. topology 애니메이션이 눈길을 끄는 주요 view이고, dashboard는 개별 이벤트가 날아다니는 것을 지켜보는 대신 추세/요약 숫자를 원하는 사람을 위해 남아 있다.
 
 **이 update가 받아들이는 추가 비용:** topology view는 이전보다 `relayhub-java`의 더 많은 surface(`/api/sources`, `/api/subscriptions`, `/api/dlq/schedule`, 그리고 SSE event shape 자체)에 의존하며, 방문 탭이 열려 있는 동안 탭당 하나의 `EventSource` connection을 유지한다 — 단순한 polling dashboard는 만들지 않았던, 현재로서는 작지만 real한 persistent-connection load를 `relayhub-java`에 가한다.
+
+## Update (2026-09-29): 결국은 click-through request/response 상세
+
+이전 update의 "결정, 확장됨"은 activity feed의 click-through 상세를 명시적으로 제외했다. 두 개의 후속 UX-review spec 모두 정확히 그것 — Recent Activity row에 대한 drill-down — 을 요청했다.
+
+같은 날의 첫 시도에서, `relayhub-java`의 attempt-detail field(`DeliveryAttemptResponse`의 request/response/error, 그리고 `GET /api/deliveries/{deliveryId}/attempts`를 통한 delivery별 전체 재시도 이력)가 단순히 CORS로 커버 안 된 게 아니라 그 서비스에서 `hasRole("ADMIN")`으로 gate되어 있다는 걸 발견했다 — 그쪽에서 이미 내린 real한 보안 결정이었다(2026-09-17: Attempt는 단순한 결과 metadata가 아니라 실제 request/response payload content를 담고 있음). CORS entry만으로는 접근 권한이 생기지 않고, public 사이트는 client-side에 credential을 심지 않고서는 admin으로 인증할 수 없어서, 그 시도는 출시 전 같은 날 양쪽 repo에서 되돌려졌다.
+
+이후 maintainer가 `relayhub-java` 쪽에서 의도적인 결정을 내렸다: 그 배포에 붙은 모든 Source/Target은 `relayhub-demo-systems` 아래에서 synthetic traffic만 생성하는 데모 시스템이며 앞으로도 그럴 것이다 — 보호해야 할 real target 연동이 없으므로, admin gate를 다시 public으로 열었다(`relayhub-java`의 `docs/status/current-state.md`(2026-09-29)와 `SecurityConfig.java`의 명시적인 "실제 Target이 연결되면 다시 검토하라" note 참고).
+
+**결정, 다시 확장됨:**
+
+- `LiveTopology`의 Recent Activity table에서 `"delivery"` stage인 row(즉 `attemptId`가 있는 row; `"ingress"`/`"dlq"` row는 없으므로 계속 상호작용 불가능)에 click-to-open `Sheet`(`src/components/relayhub/live-observability/activity-detail-sheet.tsx`)를 추가했다. 클릭한 attempt의 real한 request method/URL/body, HTTP status, response body, error message, 그리고 delivery의 완전한 real한 재시도 이력을 보여준다 — 지어낸 stage timeline이 아니다.
+- `relayhub-java`의 CORS: `/api/delivery-attempts/**`를 추가했다(동일한 bean, 동일한 origin, 여전히 `GET`-only). `GET /api/deliveries/{deliveryId}/attempts`는 새 entry가 필요 없었다 — 이미 기존 `/api/deliveries/**`로 커버되어 있었다.
+- 이 repository의 첫 Radix 기반 UI primitive를 도입했다(`@radix-ui/react-dialog`, `src/components/ui/sheet.tsx`로 wrapping) — ADR-0006은 Dialog/Sheet가 실제로 필요해지는 바로 그 순간에 Radix가 도입될 것이라고 예상했고, 지금이 바로 그 순간이다.
+- 근거가 된 spec들이 함께 요청했던 field 두 가지(trace/correlation id, attempt별 latency)는 인증 문제와 무관하게 오늘 `relayhub-java`에 존재하지 **않으며**, frontend에 추가하지 **않았다** — 무엇이 없는지와 추가하려면 무엇이 필요한지는 `docs/relayhub-observability-gap.md`를 참고하라, 이 앱에서 둘 중 하나를 지어내는 대신.
+
+이것이 `relayhub-java`의 admin write 경계를 다시 여는 것은 아니다 — 이 사이트에서의 새로운 호출도 여전히 이제는 의도적으로 public인 endpoint에 대한 `GET`이다. 보안 결정 자체(Attempt 데이터가 public이어야 하는지)는 이 repository가 아니라 `relayhub-java`에 속한다; 이 ADR은 이 사이트가 이제 그 endpoint가 public이라는 것에 의존한다는 사실과 그 이유를 기록할 뿐이다.
