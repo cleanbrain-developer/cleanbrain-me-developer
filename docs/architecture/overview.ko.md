@@ -44,9 +44,11 @@ relayhub-java's public REST + SSE endpoints (real, cross-origin, both)
 
 `src/components/ui/`(ADR-0006에서 추가)에는 작은 local, shadcn-ui 스타일의 presentational primitive 집합이 있습니다 — `Button`, `Badge`, `Card`(+ `CardLabel`/`CardValue`), `Separator`, `Skeleton`, `Sheet`(+ `SheetTitle`/`SheetDescription`/`SheetClose`). 설치된 package가 아니라 평범한 파일입니다. `Sheet`를 제외한 모두는 open/close state나 focus trapping이 필요 없습니다; `Sheet`는 `@radix-ui/react-dialog` 위에 만들어졌습니다(이 repo의 첫 Radix dependency이며, RelayHub activity drill-down을 위해 구체적으로 추가됐습니다 — ADR-0004의 2026-09-29 Update 참고), shadcn의 기본값이 아니라 이 사이트 자체의 token으로 재스타일링됐습니다. 지금까지는 `/`, header, `/lab/relayhub`의 activity drill-down, `/projects`의 `ProjectCard`/`ProjectDetail`(기존 페이지에 대한 첫 retrofit), `/case-studies`의 `CaseStudyCard`/`IncidentSummary`, 그리고 `/experience`의 `RelatedLinks`(`src/components/experience/related-links.tsx` — `Badge`의 chip 시각 언어를 재사용해 focus area의 관련 Project(들)/Case Study(들)로 연결하는 작은 pill-style `Link`)에서 쓰입니다. 다른 페이지는 자기 자신의 visual-hierarchy pass가 진행될 때만 retrofit됩니다(`docs/status/current-state.md`의 "Next" 참고).
 
-### Project diagram
+### Flow diagram
 
-`src/components/project/architecture-diagram.tsx`: `/projects/[slug]`에서 쓰이는 작고 static하며 손으로 만든 SVG flow-diagram primitive(`nodes`/`edges` prop) — `LiveTopology`의 hub-spoke pulse 엔진과 의도적으로 분리되어 있습니다(모양이 다르고, 분리해두면 diagram이 Live console에 regression 위험을 전혀 지우지 않습니다). viewport에 맞춰 줄어드는 대신 고정된 pixel width로 렌더링되며 `overflow-x-auto`로 감싸져 있습니다 — Recent Activity table이 이미 만들고 있는 것과 같은 trade-off로, node label이 좁은 화면에서 읽을 수 없는 크기로 줄어드는 대신 legible하게 유지됩니다. hand-placed-coordinate content module(`content/relayhub-architecture.ts`, `content/english-core-speaking-architecture.ts`)이 이를 feed합니다 — 정확히 두 개뿐이므로 범용 layout algorithm도 Mermaid도 없습니다.
+`src/components/project/architecture-diagram.tsx`: 작고 static하며 손으로 만든 SVG flow-diagram primitive(`nodes`/`edges` prop) — `LiveTopology`의 hub-spoke pulse 엔진과 의도적으로 분리되어 있습니다(모양이 다르고, 분리해두면 diagram이 Live console에 regression 위험을 전혀 지우지 않습니다). viewport에 맞춰 줄어드는 대신 고정된 pixel width로 렌더링되며 `overflow-x-auto`로 감싸져 있습니다 — Recent Activity table이 이미 만들고 있는 것과 같은 trade-off로, node label이 좁은 화면에서 읽을 수 없는 크기로 줄어드는 대신 legible하게 유지됩니다. hand-placed-coordinate content module이 이를 feed합니다 — 몇 개뿐이므로 범용 layout algorithm도 Mermaid도 없습니다:
+- `content/relayhub-architecture.ts`, `content/english-core-speaking-architecture.ts`: `/projects/[slug]`에서 쓰이는 전체 project pipeline.
+- `content/retry-dlq-flow.ts`, `content/observability-flow.ts`: `/architecture`를 위한 더 좁은, principle 전용 diagram. 거기서 세 번째 diagram("Event-driven integration")은 새로 만드는 대신 `relayhub-architecture.ts`의 data를 그대로 재사용합니다 — `/projects/relayhub`에 이미 보이는 것과 real하게 같은 flow이기 때문입니다.
 
 ### Presentation
 

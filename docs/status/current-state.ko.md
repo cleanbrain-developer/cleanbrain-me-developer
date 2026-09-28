@@ -2,7 +2,7 @@
 
 # Current State
 
-Last updated: 2026-09-29 (Experience TOC + cross-link)
+Last updated: 2026-09-29 (Architecture 페이지 다이어그램)
 
 ## Current phase
 
@@ -103,6 +103,12 @@ Last updated: 2026-09-29 (Experience TOC + cross-link)
   - `content/types.ts`: `ExperienceFocusArea`에 `relatedLinks: { label, href }[]`를 추가했다. `content/experience.ts`: 각 focus area에 기존 Project(들)/Case Study(들)에 대한 real한 topical 연결을 채웠다 — 대부분은 highlight 문장에 이미 명시적인 "(see RelayHub, Projects)"/"(see Case Studies)" 괄호 언급이 있었고(이제 real한 link가 됐다); `transaction-and-data-consistency` → 두 consistency/concurrency case study, `production-troubleshooting` → Case Studies index는 기존 인용 문구가 없었지만 real한 topical 근거로 추가했다(지어낸 것이 아니다). Chip label은 새 문장이 아니라 이미 존재하는 field(`Project.name`, `CaseStudy.incidentType`)를 재사용한다.
   - 새 `src/components/experience/related-links.tsx`: `Badge`의 chip 스타일과 시각적으로 일치하는 작은 "See it in:" pill-style `Link` row. `src/app/experience/page.tsx`: 각 section에 `id={area.slug}`를 추가했고, intro 문단 바로 뒤에 compact anchor-nav `<nav>`(7개의 번호 매긴 pill link, wrapping, sticky 아님 — header 자체도 sticky가 아니다)를 추가했으며, 각 area의 highlight 아래에 `<RelatedLinks>`를 렌더링한다.
   - 검증됨: `npm run lint`/`test`/`build` 모두 통과한다. desktop(1440px)과 mobile(390px)에서 real한 headless-Chromium pass를 했다: 7개의 TOC href가 각자의 section `id`와 정확히 일치하고, TOC pill을 클릭하면 올바른 anchor로 이동하며, 모든 focus area가 자신의 related-links chip을 보여주고(총 11개 chip + 기존 header nav 자체의 "Case Studies" link = 넓은 selector로 12개 매칭), 두 viewport 모두에서 horizontal overflow가 없다.
+- **조율된 roadmap 항목 4를 구현했다: Architecture 페이지 다이어그램**(`/architecture`) — 원래 UX-spec reconciliation의 마지막 항목으로, 이 roadmap thread를 마무리한다. 새 다이어그램 component를 만드는 대신 spec 자체의 지시대로 `ArchitectureDiagram` primitive(`src/components/project/architecture-diagram.tsx`)를 재사용했다.
+  - "Event-driven integration": `content/relayhub-architecture.ts`의 기존 node/edge/size를 그대로 재사용한다(`/projects/relayhub`에 이미 있는 것과 같은 다이어그램) — 새 content module을 만든 게 아니라 real하게 동일한 flow다.
+  - "Retry and DLQ as first-class outcomes": 새 `src/content/retry-dlq-flow.ts`, 전체 pipeline을 다시 보여주는 대신 Deliver/Retry/DLQ/Replay/Target을 확대한 다이어그램이다.
+  - "Observability as part of the design": 새 `src/content/observability-flow.ts` — `Actuator → Prometheus → Metrics Proxy → This Site` — `relayhub-java`의 real한 `MetricsController.java`와 `cleanbrain-me-infra`의 README(`kubernetes/apps/relayhub-java/prometheus/`)를 대조해 작성 전에 검증했고, 추측이 아니다: Prometheus는 public hostname이 없고, `relayhub-java`의 API만 거기에 말을 걸며, 이 사이트는 그 API에만 말을 건다(ADR-0004에 따라 CORS로 scoped됨).
+  - 나머지 세 principle(Idempotency/ordering, Evidence over simulation, Batch vs. real-time)은 여전히 prose-only다 — 자연스러운 flow-diagram 모양이 없다. 페이지의 intro 문장을 "Not a diagram gallery"에서 "Not just a diagram gallery... illustrated where a picture clarifies the shape faster than prose"로 부드럽게 바꿔서 이제 세 section에 다이어그램이 생긴 후에도 정확하게 유지되도록 했다.
+  - 검증됨: `npm run lint`/`test`/`build` 모두 통과한다. desktop(1440px)과 mobile(390px)에서 real한 headless-Chromium pass를 했다: 세 다이어그램 모두 legible하게 렌더링되고(fixed-width + `overflow-x-auto`, `/projects/[slug]`가 이미 하는 것과 같은 trade-off), 두 viewport 모두에서 horizontal page overflow가 없으며, `/projects/relayhub`의 기존 다이어그램은 변경 없이 렌더링된다(공유된 content module, 거기서 여전히 정확히 하나의 다이어그램 `<svg>`임을 확인).
 
 ## In progress
 
@@ -110,13 +116,12 @@ Last updated: 2026-09-29 (Experience TOC + cross-link)
 
 ## Next
 
-1. 조율된 roadmap 항목 4: Architecture page diagram(손으로 만든 SVG 2~3개 — 새로 만드는 대신 Project visual layer의 `ArchitectureDiagram` primitive를 재사용). 아직 시작 안 함.
-2. ADR-0006 spec의 Phase 5: accessibility/performance/responsive 다듬기 pass. 아직 시작 안 함.
-3. Test suite를 넓힌다: `live-observability.test.ts`는 순수한 Prometheus-response parsing을 커버하지만, 아직 route-level smoke test는 없다(이제 `/`의 real한 콘텐츠, `/profile`과 `/lab`의 redirect, dashboard와 그 activity drill-down을 렌더링하는 `/lab/relayhub`, `/projects`, `/case-studies`, `/experience`의 새 component까지 포함) — 지금까지는 변경마다 브라우저 screenshot으로만 수동 검증했다.
-4. `vitest`/Node 버전 불일치를 해결하는 데 노력을 들일지(이 환경/CI의 Node를 ≥22로 올리고 `vitest@5`로 이동) `vitest@3.2.7`에 머물지 결정한다 — "Known constraints" 참고. (Note: `.github/workflows/deploy.yml`의 `node-version: 20`을 사용하는 GitHub Actions의 `actions/setup-node@v4`는 현재 Node 20.x patch release를 가져오며, 반드시 이 local 환경의 20.11.1과 같지는 않다 — 결정하기 전에 CI의 Node 20도 `styleText`가 없는지, 아니면 이것이 순전히 local-환경 제약인지 다시 확인할 가치가 있다.)
-5. dashboard가 시간이 지남에 따라 `relayhub-java`의 더 많은 사용 가능한 metric을 노출해야 하는지 고려한다 — 어떤 추가든 ADR-0004에 따라 해당 서비스에 대한 자체적이고 의도적인 CORS-allowlist entry가 필요하며, 포괄적인 grant는 안 된다.
-6. ~~동작하는 Python/`uv`/`pip` toolchain이 이 환경이나 CI에서 사용 가능해지면, real한 `specify init --here --integration claude --integration codex`를 실행한다~~ **완료 (2026-09-20, 이 항목이 미뤄졌던 V2 migration과 같은 날)** — 위의 "Completed" 참고. CLI가 생성한 install이 `.specify/memory/constitution.md`를 덮어쓰지 않고 그대로 두었으므로, 여기서 예상했던 조율 단계는 실제로는 필요하지 않았다.
-7. `specify`가 이 환경에서 real하게 동작하는 CLI가 된 지금, `PROJECT.yaml`의 `delivery.cli_present: false`를 `true`로 바꿔야 할지 고려한다 — 이 field는 현재 개발 환경에 설치된 tooling이 아니라 이 repository 자체가 CLI 제품을 제공하는지만을 나타내므로, 값을 바꾸기 전에 이 field가 의도하는 의미를 먼저 확인해야 한다.
+1. 조율된 UX-spec roadmap(Project visual layer, Case Study UX, Experience TOC + cross-link, Architecture 페이지 다이어그램)은 이제 완전히 끝났다. 남은 것: ADR-0006 spec의 Phase 5 — accessibility/performance/responsive 다듬기 pass. 아직 시작 안 함.
+2. Test suite를 넓힌다: `live-observability.test.ts`는 순수한 Prometheus-response parsing을 커버하지만, 아직 route-level smoke test는 없다(이제 `/`의 real한 콘텐츠, `/profile`과 `/lab`의 redirect, dashboard와 그 activity drill-down을 렌더링하는 `/lab/relayhub`, `/projects`, `/case-studies`, `/experience`, `/architecture`의 새 component까지 포함) — 지금까지는 변경마다 브라우저 screenshot으로만 수동 검증했다.
+3. `vitest`/Node 버전 불일치를 해결하는 데 노력을 들일지(이 환경/CI의 Node를 ≥22로 올리고 `vitest@5`로 이동) `vitest@3.2.7`에 머물지 결정한다 — "Known constraints" 참고. (Note: `.github/workflows/deploy.yml`의 `node-version: 20`을 사용하는 GitHub Actions의 `actions/setup-node@v4`는 현재 Node 20.x patch release를 가져오며, 반드시 이 local 환경의 20.11.1과 같지는 않다 — 결정하기 전에 CI의 Node 20도 `styleText`가 없는지, 아니면 이것이 순전히 local-환경 제약인지 다시 확인할 가치가 있다.)
+4. dashboard가 시간이 지남에 따라 `relayhub-java`의 더 많은 사용 가능한 metric을 노출해야 하는지 고려한다 — 어떤 추가든 ADR-0004에 따라 해당 서비스에 대한 자체적이고 의도적인 CORS-allowlist entry가 필요하며, 포괄적인 grant는 안 된다.
+5. ~~동작하는 Python/`uv`/`pip` toolchain이 이 환경이나 CI에서 사용 가능해지면, real한 `specify init --here --integration claude --integration codex`를 실행한다~~ **완료 (2026-09-20, 이 항목이 미뤄졌던 V2 migration과 같은 날)** — 위의 "Completed" 참고. CLI가 생성한 install이 `.specify/memory/constitution.md`를 덮어쓰지 않고 그대로 두었으므로, 여기서 예상했던 조율 단계는 실제로는 필요하지 않았다.
+6. `specify`가 이 환경에서 real하게 동작하는 CLI가 된 지금, `PROJECT.yaml`의 `delivery.cli_present: false`를 `true`로 바꿔야 할지 고려한다 — 이 field는 현재 개발 환경에 설치된 tooling이 아니라 이 repository 자체가 CLI 제품을 제공하는지만을 나타내므로, 값을 바꾸기 전에 이 field가 의도하는 의미를 먼저 확인해야 한다.
 
 ## Open decisions
 
