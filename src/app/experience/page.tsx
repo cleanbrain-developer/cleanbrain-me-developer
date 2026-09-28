@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
 import { profile } from "@/content/profile";
 import { experienceFocusAreas } from "@/content/experience";
+import { RelatedLinks } from "@/components/experience/related-links";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -22,11 +23,24 @@ export default function ExperiencePage() {
           backend systems. Presented here by focus area rather than as a company-by-company
           timeline — each area links to the Projects or Case Studies where it shows up concretely.
         </p>
+        <nav aria-label="Focus areas" className="mt-6 flex flex-wrap gap-2">
+          {experienceFocusAreas.map((area, index) => (
+            <a
+              key={area.slug}
+              href={`#${area.slug}`}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-accent hover:text-foreground"
+            >
+              <span className="font-mono">{String(index + 1).padStart(2, "0")}</span>
+              {area.shortLabel}
+            </a>
+          ))}
+        </nav>
       </section>
       <div className="pb-20">
         {experienceFocusAreas.map((area, index) => (
           <section
             key={area.slug}
+            id={area.slug}
             className="grid grid-cols-1 gap-3 border-t border-border py-10 first:border-t-0 first:pt-0 lg:grid-cols-[88px_1fr] lg:gap-10"
           >
             <span className="font-mono text-3xl font-semibold text-border sm:text-4xl">
@@ -40,6 +54,7 @@ export default function ExperiencePage() {
                   <li key={highlight}>{highlight}</li>
                 ))}
               </ul>
+              <RelatedLinks links={area.relatedLinks} />
             </div>
           </section>
         ))}

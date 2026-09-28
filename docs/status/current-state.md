@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-09-29
+Last updated: 2026-09-29 (Experience TOC + cross-links)
 
 ## Current phase
 
@@ -97,6 +97,10 @@ Last updated: 2026-09-29
   - New `src/components/case-study/incident-summary.tsx`: a `Card`-based (same `src/components/ui/card.tsx` `ProjectCard`/`ProjectDetail` adopted last slice) definition-list — Incident Type / Primary Symptom / Root Cause / Resolution / Trade-off — rendered by `CaseStudyDetail` right after the header, before the existing 10-section Context→Lessons Learned narrative (purely additive, that narrative is untouched).
   - `CaseStudyCard` (`case-study-card.tsx`) retrofitted onto `Card`/`Badge` the same way `ProjectCard` was, showing `incidentType` as a badge — `/projects` and `/case-studies` now share one consistent card visual language instead of two different hand-rolled styles.
   - Verified: `npm run lint`/`test`/`build` all pass. Real headless-Chromium pass at desktop (1440px) and mobile (390px): `/case-studies` shows badge-styled incident types on all three cards; each detail page shows the Incident Summary card with real data in all five fields above the existing narrative, no overflow on mobile.
+- **Implemented reconciled roadmap item 3: Experience TOC + cross-links** (`/experience`), same narrow one-slice scope as the two visual-layer slices before it.
+  - `content/types.ts`: added `relatedLinks: { label, href }[]` to `ExperienceFocusArea`. `content/experience.ts`: populated it per focus area with genuine topical connections to the existing Project(s)/Case Study(ies) — most already had an explicit "(see RelayHub, Projects)"/"(see Case Studies)" parenthetical in their highlight prose (now made into real links); `transaction-and-data-consistency` → both consistency/concurrency case studies and `production-troubleshooting` → the Case Studies index were added on real topical grounds even without pre-existing citation text, not fabricated. Chip labels reuse existing fields (`Project.name`, `CaseStudy.incidentType`) rather than new prose.
+  - New `src/components/experience/related-links.tsx`: a small "See it in:" row of pill-style `Link`s, visually matching `Badge`'s chip styling. `src/app/experience/page.tsx`: added `id={area.slug}` per section, a compact anchor-nav `<nav>` (7 numbered pill links, wrapping, not sticky — the header itself isn't sticky either) right after the intro paragraph, and `<RelatedLinks>` under each area's highlights.
+  - Verified: `npm run lint`/`test`/`build` all pass. Real headless-Chromium pass at desktop (1440px) and mobile (390px): all 7 TOC hrefs match their section `id`s exactly, clicking a TOC pill navigates to the right anchor, every focus area shows its related-links chips (11 chips total + the existing header nav's own "Case Studies" link = 12 matched by a broad selector), and no horizontal overflow at either viewport.
 
 ## In progress
 
@@ -104,9 +108,9 @@ Last updated: 2026-09-29
 
 ## Next
 
-1. Reconciled roadmap items 3–4: Experience TOC + cross-links, and Architecture-page diagrams (2–3 hand-built SVGs — reuse the `ArchitectureDiagram` primitive from the Project visual layer rather than building a new one). Not started.
+1. Reconciled roadmap item 4: Architecture-page diagrams (2–3 hand-built SVGs — reuse the `ArchitectureDiagram` primitive from the Project visual layer rather than building a new one). Not started.
 2. Phase 5 of ADR-0006's spec: accessibility/performance/responsive polish pass. Not started.
-3. Broaden the test suite: `live-observability.test.ts` covers the pure Prometheus-response parsing, but there is no route-level smoke test yet (now including `/`'s real content, `/profile`'s and `/lab`'s redirects, `/lab/relayhub` rendering the dashboard and its activity drill-down, `/projects`'s and `/case-studies`'s new components) — only manually verified via browser screenshots per change so far.
+3. Broaden the test suite: `live-observability.test.ts` covers the pure Prometheus-response parsing, but there is no route-level smoke test yet (now including `/`'s real content, `/profile`'s and `/lab`'s redirects, `/lab/relayhub` rendering the dashboard and its activity drill-down, `/projects`'s, `/case-studies`'s, and `/experience`'s new components) — only manually verified via browser screenshots per change so far.
 4. Decide whether to spend effort resolving the `vitest`/Node version mismatch (upgrade this environment's/CI's Node to ≥22 and move to `vitest@5`) versus staying on `vitest@3.2.7` — see "Known constraints". (Note: GitHub Actions' `actions/setup-node@v4` with `node-version: 20` in `.github/workflows/deploy.yml` gets a current Node 20.x patch release, not necessarily this local environment's 20.11.1 — worth double-checking whether CI's Node 20 also lacks `styleText`, or whether this is purely a local-environment constraint, before deciding.)
 5. Consider whether the dashboard should surface more of `relayhub-java`'s available metrics over time — any addition needs its own deliberate CORS-allowlist entry on that service, per ADR-0004, not a blanket grant.
 6. ~~Run a real `specify init --here --integration claude --integration codex`~~ **Done (2026-09-20, same day as the V2 migration this was deferred from)** — see "Completed" above. The CLI-generated install left `.specify/memory/constitution.md` untouched rather than overwriting it, so the reconciliation step anticipated here turned out not to be needed.

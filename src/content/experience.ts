@@ -11,6 +11,10 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
       "API and service boundary design for systems that connect multiple internal and external consumers",
       "Backend architecture for both greenfield services (see Projects) and systems with existing constraints",
     ],
+    relatedLinks: [
+      { label: "RelayHub", href: "/projects/relayhub" },
+      { label: "English Core Speaking", href: "/projects/english-core-speaking" },
+    ],
   },
   {
     slug: "enterprise-integration",
@@ -24,6 +28,10 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
       "Designing for partial failure: retry, dead-letter handling, and replay rather than best-effort delivery",
       "See RelayHub (Projects) and the Case Studies for concrete examples of this focus area in practice",
     ],
+    relatedLinks: [
+      { label: "RelayHub", href: "/projects/relayhub" },
+      { label: "Race Condition", href: "/case-studies/distributed-delivery-race-condition" },
+    ],
   },
   {
     slug: "transaction-and-data-consistency",
@@ -34,6 +42,10 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
     highlights: [
       "Identifying race conditions and inconsistent-state windows in asynchronous processing paths",
       "Choosing between strict consistency, eventual consistency, and compensating actions based on the actual failure modes involved",
+    ],
+    relatedLinks: [
+      { label: "Race Condition", href: "/case-studies/distributed-delivery-race-condition" },
+      { label: "Timeout & Concurrency", href: "/case-studies/approval-rollback-timeout" },
     ],
   },
   {
@@ -48,6 +60,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
       "OAuth2/OIDC integration for user-facing services (see English Core Speaking, Projects)",
       "Session and identity boundaries between a frontend, backend API, and third-party identity providers",
     ],
+    relatedLinks: [{ label: "English Core Speaking", href: "/projects/english-core-speaking" }],
   },
   {
     slug: "batch-async-event-driven",
@@ -58,6 +71,10 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
     highlights: [
       "Event-driven pipelines with Kafka as the backbone (see RelayHub, Projects)",
       "Batch processing constraints when legacy state and new configuration must coexist (see Case Studies)",
+    ],
+    relatedLinks: [
+      { label: "RelayHub", href: "/projects/relayhub" },
+      { label: "Schema Drift", href: "/case-studies/legacy-batch-state" },
     ],
   },
   {
@@ -71,6 +88,7 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
       "Eliminated a recurring monthly cloud cost by migrating a statistics-processing workload to on-premises infrastructure",
       "Distinguishing a fix that passes a test from one that is verified against production behavior",
     ],
+    relatedLinks: [{ label: "Case Studies", href: "/case-studies" }],
   },
   {
     slug: "ai-llm-integration",
@@ -83,5 +101,6 @@ export const experienceFocusAreas: ExperienceFocusArea[] = [
       "Validated real-time voice delivery for 10 concurrent recipients per WebSocket channel",
       "External AI/LLM API integration for a user-facing evaluation feature (see English Core Speaking, Projects)",
     ],
+    relatedLinks: [{ label: "English Core Speaking", href: "/projects/english-core-speaking" }],
   },
 ];

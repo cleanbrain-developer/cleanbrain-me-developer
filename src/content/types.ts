@@ -10,6 +10,8 @@ export interface ExperienceFocusArea {
   shortLabel: string;
   description: string;
   highlights: string[];
+  /** Project(s)/Case Study(ies) this focus area is demonstrated in, as real navigable links. */
+  relatedLinks: { label: string; href: string }[];
 }
 
 export interface ImpactStat {
