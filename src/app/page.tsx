@@ -7,6 +7,7 @@ import { LiveSignal } from "@/components/portfolio/live-signal";
 import { ProjectCard } from "@/components/project/project-card";
 import { CaseStudyCard } from "@/components/case-study/case-study-card";
 import { Button } from "@/components/ui/button";
+import { Card, CardLabel, CardValue } from "@/components/ui/card";
 import { profile } from "@/content/profile";
 import { projects } from "@/content/projects";
 import { caseStudies } from "@/content/case-studies";
@@ -35,6 +36,10 @@ const personJsonLd = {
 export default function Home() {
   const featuredProjects = projects.filter((project) => project.featured);
   const selectedCaseStudies = caseStudies.slice(0, 2);
+  // The three broadest, most immediately legible numbers — deliberately not
+  // all six (that's the full Impact section below); this is a 10-second
+  // scan, not the detailed breakdown.
+  const headlineStats = impactStats.slice(0, 3);
 
   return (
     <Container>
@@ -49,6 +54,14 @@ export default function Home() {
           <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             {profile.tagline}
           </h1>
+          <div className="mt-6 grid grid-cols-3 gap-3">
+            {headlineStats.map((stat) => (
+              <Card key={stat.label} compact>
+                <CardLabel>{stat.label}</CardLabel>
+                <CardValue compact>{stat.value}</CardValue>
+              </Card>
+            ))}
+          </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button href="/lab/relayhub">Open RelayHub Live</Button>
             <Button href="/projects" variant="secondary">

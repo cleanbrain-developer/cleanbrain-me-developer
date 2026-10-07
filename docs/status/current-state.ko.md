@@ -2,7 +2,7 @@
 
 # Current State
 
-Last updated: 2026-10-07 (/lab을 multi-service index로 일반화)
+Last updated: 2026-10-07 (OG 공유 이미지 + hero headline stat)
 
 ## Current phase
 
@@ -120,6 +120,11 @@ Last updated: 2026-10-07 (/lab을 multi-service index로 일반화)
   - `src/app/lab/[slug]/page.tsx`(새로 추가, registry에 대한 `generateStaticParams`)가 기존의 손으로 작성된 `src/app/lab/relayhub/page.tsx`를 대체한다 — 같은 `/lab/relayhub` URL, link 깨짐 없음. `src/app/lab/page.tsx`는 이제 real한 index page다: `LiveServiceCard`들의 grid(새 `src/components/lab/` 폴더)이며, card마다 작고 순수하게 장식적이고 data-driven이 아닌 `LivePulse` 애니메이션이 있다 — `LiveTopology`의 pulse engine 재사용이 아니며, ADR-0006이 `LiveSignal`에 이미 적용했던 것과 같은 regression-avoidance 선례를 따른다.
   - `site-header.tsx`의 "Live Systems" nav 항목은 이제 `/lab`을 가리킨다(이전엔 `/lab/relayhub`) — 일반화되어야 할 유일한 곳이다. 기존의 다른 모든 직접적인 RelayHub link(`/contact`, `/projects`, homepage hero)는 변경되지 않았다 — 각각 이미 자기 자신의 link 텍스트에서 명시적으로 RelayHub라고 이름 붙어 있기 때문이다.
   - 검증됨: `npm run lint`/`test`/`build` 모두 통과한다(`/lab/relayhub`가 이제 dynamic route를 통해 생성되면서도 여전히 static route로 존재함을 확인). local static export에 대한 real한 headless-Chromium pass: `/lab`이 card 하나짜리 grid를 렌더링하고, 클릭하면 `/lab/relayhub`로 navigate한다(`networkidle`만이 아니라 `waitForURL`로 확인했다 — 첫 pass에서 `networkidle`이 Next.js의 client-side route transition이 끝나기 전에 resolve될 수 있음을 발견했다), 페이지가 service-driven heading("RelayHub Live")과 함께 올바르게 렌더링되며, mobile screenshot에서 grep만으로는 놓쳤을 하드코딩된 문자열 하나(`LiveDashboard`의 "Connecting to relayhub-java…" loading text)를 발견해서 `${service.name}`으로 고쳤다. 두 viewport 모두에서 horizontal overflow 없음.
+
+- **real한 OG/Twitter 공유 카드 이미지를 추가했고, Impact 숫자 중 가장 넓은 세 개를 hero로 끌어올렸다**(2026-10-07), maintainer 본인의 우선순위 매긴 UI/UX insight review에 따라 — 효과 대비 노력이 가장 좋은 두 항목을 골랐다(세 번째인 PDF 이력서 다운로드는, 이 engineer가 이 사이트의 `/resume`를 실제 지원에 쓰지 않는다는 이유로 명시적으로 제외됐다).
+  - 새 `src/app/opengraph-image.tsx`: Next.js의 file-based OG-image convention(`favicon.ico`/`icon.png`/`apple-icon.png`에 이미 쓰인 것과 같은 메커니즘)으로, `next/og`의 `ImageResponse`를 통해 build time에 static한 1200×630 PNG로 렌더링된다 — `output: "export"`를 만족시키려면 명시적인 `export const dynamic = "force-static"`가 필요했다(이게 없으면 build가 정확히 어떤 fix가 필요한지 알려주는 명확한 error와 함께 실패한다). 브랜드가 적용된 카드: 사이트 자체 token과 일치하는 dark background, `profile.name`/`profile.tagline`/`profile.role`/years, 그리고 사이트 URL — 전부 `src/content/profile.ts`에서 가져온 것이지, 별도로 유지되는 텍스트가 아니다. `twitter-image.tsx`는 필요 없다 — Next.js가 자동으로 같은 `opengraph-image`를 Twitter card에도 fallback으로 쓴다. `layout.tsx`의 `twitter.card`는 `"summary"`에서 `"summary_large_image"`로 바뀌어서 실제로 이미지를 full width로 쓰도록 했다. 검증됨: `next build`가 real한 `out/opengraph-image`를 만든다(`file`로 1200×630 PNG data가 real함을 확인, stub이 아님), 렌더링된 `<head>`가 width/height/alt와 함께 올바른 절대 `og:image`/`twitter:image` URL을 가지고 있다. 받아들인 cosmetic 한계 하나: `ImageResponse` 뒤의 renderer인 Satori는 real한 font file이 embed되어 있어야만 `fontFamily: "monospace"`를 실제로 반영한다 — 그 추가 복잡도 없이는 "cleanbrain.developer" wordmark가 true monospace 대신 기본 sans fallback으로 렌더링된다; 이 하나의 cosmetic 디테일을 위해 font file을 번들링할 가치는 없다고 판단했다.
+  - `src/app/page.tsx`: hero tagline 바로 아래, CTA 버튼 위에 3-card headline-stat strip(`impactStats.slice(0, 3)` — Years / Projects delivered / Users, `LiveSignal`이 이미 쓰는 것과 같은 `Card`/`CardLabel`/`CardValue compact` primitive를 재사용)을 추가했다 — 그래서 10초간 스캔하는 리크루터가 스크롤하기 전에 headline 숫자를 먼저 보게 된다, 본문만 보는 대신. 아래의 기존 6-stat `ImpactStats` section(detail 텍스트 포함)은 변경되지 않았다 — 이건 그걸 대체하는 게 아니라 축약된 preview다.
+  - 검증됨: `npm run lint`/`test`/`build` 모두 통과한다. desktop(1440px)과 mobile(390px)에서 real한 headless-Chromium screenshot: 세 stat card가 fold 안에서 `LiveSignal` 옆/위에 잘 보이고, 두 width 모두에서 horizontal overflow나 crowding이 없다.
 
 ## In progress
 
