@@ -25,15 +25,17 @@ type DrillableEvent = RelayHubLiveEvent & { attemptId: string };
  */
 export function ActivityDetailSheet({
   event,
+  baseUrl,
   onClose,
 }: {
   event: DrillableEvent | null;
+  baseUrl: string;
   onClose: () => void;
 }) {
   return (
     <Sheet open={event !== null} onOpenChange={(open) => !open && onClose()}>
       <SheetClose />
-      {event && <ActivityDetailContent key={event.attemptId} event={event} />}
+      {event && <ActivityDetailContent key={event.attemptId} event={event} baseUrl={baseUrl} />}
     </Sheet>
   );
 }
@@ -45,20 +47,20 @@ export function ActivityDetailSheet({
  * clicking a different row while one is already open, so this never needs to
  * handle an open-to-open transition, only mount-to-unmount.
  */
-function ActivityDetailContent({ event }: { event: DrillableEvent }) {
+function ActivityDetailContent({ event, baseUrl }: { event: DrillableEvent; baseUrl: string }) {
   const [attempt, setAttempt] = useState<RelayHubDeliveryAttempt>();
   const [history, setHistory] = useState<RelayHubDeliveryAttempt[]>();
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    fetchDeliveryAttempt(event.attemptId)
+    fetchDeliveryAttempt(baseUrl, event.attemptId)
       .then((a) => {
         setAttempt(a);
-        return fetchDeliveryAttempts(a.deliveryId);
+        return fetchDeliveryAttempts(baseUrl, a.deliveryId);
       })
       .then(setHistory)
-      .catch(() => setError("Couldn't load this attempt's detail from relayhub-java."));
-  }, [event.attemptId]);
+      .catch(() => setError("Couldn't load this attempt's detail."));
+  }, [baseUrl, event.attemptId]);
 
   return (
     <>

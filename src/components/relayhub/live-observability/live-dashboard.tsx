@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { LiveService } from "@/content/live-services";
 import {
   fetchRelayHubLiveObservability,
   type RelayHubLiveObservability,
@@ -37,34 +38,27 @@ function StatTile({
   );
 }
 
-export function LiveDashboard() {
+export function LiveDashboard({ service }: { service: LiveService }) {
   const [data, setData] = useState<RelayHubLiveObservability>();
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
-  function refresh() {
-    fetchRelayHubLiveObservability()
+  const refresh = useCallback(() => {
+    fetchRelayHubLiveObservability(service.baseUrl)
       .then((result) => {
         setData(result);
         setError(undefined);
       })
-      .catch(() => setError("relayhub-java's live monitoring data is currently unavailable."))
+      .catch(() => setError(`${service.name}'s live monitoring data is currently unavailable.`))
       .finally(() => setIsLoading(false));
-  }
+  }, [service.baseUrl, service.name]);
 
   useEffect(() => {
-    fetchRelayHubLiveObservability()
-      .then((result) => {
-        setData(result);
-        setError(undefined);
-      })
-      .catch(() => setError("relayhub-java's live monitoring data is currently unavailable."))
-      .finally(() => setIsLoading(false));
-
+    refresh();
     intervalRef.current = setInterval(refresh, REFRESH_INTERVAL_MS);
     return () => clearInterval(intervalRef.current);
-  }, []);
+  }, [refresh]);
 
   const ingressSeries = data?.ingressSeries[0]?.points ?? [];
 
@@ -77,26 +71,24 @@ export function LiveDashboard() {
             <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
           </span>
           <h2 className="text-lg font-semibold text-foreground sm:text-xl">
-            relayhub-java — Live Monitoring
+            {service.name} ({service.language}) — Live Monitoring
           </h2>
         </div>
         <a
-          href="https://relayhub-java.developer.cleanbrain.me"
+          href={service.baseUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-accent hover:underline"
         >
-          Open relayhub-java &rarr;
+          Open {service.name} &rarr;
         </a>
       </div>
       <p className="mt-2 max-w-2xl text-sm text-muted">
         Real production telemetry, refreshed automatically every 10 seconds — not a simulation.
-        Synthetic traffic against the real service is generated continuously by
-        relayhub-demo-systems.
       </p>
 
       {isLoading ? (
-        <p className="mt-6 text-sm text-muted">Connecting to relayhub-java…</p>
+        <p className="mt-6 text-sm text-muted">Connecting to {service.name}…</p>
       ) : error && !data ? (
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <p className="text-sm text-muted">{error}</p>

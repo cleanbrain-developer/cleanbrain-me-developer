@@ -1,5 +1,3 @@
-const RELAYHUB_JAVA_BASE_URL = "https://relayhub-java.developer.cleanbrain.me";
-
 export interface RelayHubSource {
   id: string;
   key: string;
@@ -74,31 +72,37 @@ export interface RelayHubDeliveryAttempt {
   attemptedAt: string;
 }
 
-async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${RELAYHUB_JAVA_BASE_URL}${path}`);
+async function getJson<T>(baseUrl: string, path: string): Promise<T> {
+  const response = await fetch(`${baseUrl}${path}`);
   if (!response.ok) throw new Error(`${path} failed: ${response.status}`);
   return (await response.json()) as T;
 }
 
-export async function fetchDlqSchedule(): Promise<RelayHubDlqSchedule> {
-  return getJson<RelayHubDlqSchedule>("/api/dlq/schedule");
+export async function fetchDlqSchedule(baseUrl: string): Promise<RelayHubDlqSchedule> {
+  return getJson<RelayHubDlqSchedule>(baseUrl, "/api/dlq/schedule");
 }
 
-export async function fetchDeliverySummary(): Promise<RelayHubDeliverySummary> {
-  return getJson<RelayHubDeliverySummary>("/api/deliveries/summary");
+export async function fetchDeliverySummary(baseUrl: string): Promise<RelayHubDeliverySummary> {
+  return getJson<RelayHubDeliverySummary>(baseUrl, "/api/deliveries/summary");
 }
 
 /** A single attempt's full request/response/error detail. */
-export async function fetchDeliveryAttempt(attemptId: string): Promise<RelayHubDeliveryAttempt> {
-  return getJson<RelayHubDeliveryAttempt>(`/api/delivery-attempts/${attemptId}`);
+export async function fetchDeliveryAttempt(
+  baseUrl: string,
+  attemptId: string,
+): Promise<RelayHubDeliveryAttempt> {
+  return getJson<RelayHubDeliveryAttempt>(baseUrl, `/api/delivery-attempts/${attemptId}`);
 }
 
 /** The full, real retry history for one delivery, oldest attempt first. */
-export async function fetchDeliveryAttempts(deliveryId: string): Promise<RelayHubDeliveryAttempt[]> {
-  return getJson<RelayHubDeliveryAttempt[]>(`/api/deliveries/${deliveryId}/attempts`);
+export async function fetchDeliveryAttempts(
+  baseUrl: string,
+  deliveryId: string,
+): Promise<RelayHubDeliveryAttempt[]> {
+  return getJson<RelayHubDeliveryAttempt[]>(baseUrl, `/api/deliveries/${deliveryId}/attempts`);
 }
 
-export async function fetchTopology(): Promise<{
+export async function fetchTopology(baseUrl: string): Promise<{
   sources: RelayHubSource[];
   targets: RelayHubTarget[];
   subscriptions: RelayHubSubscription[];
@@ -106,11 +110,11 @@ export async function fetchTopology(): Promise<{
   dlqSchedule: RelayHubDlqSchedule;
 }> {
   const [sources, targets, subscriptions, summary, dlqSchedule] = await Promise.all([
-    getJson<RelayHubSource[]>("/api/sources"),
-    getJson<RelayHubTarget[]>("/api/targets"),
-    getJson<RelayHubSubscription[]>("/api/subscriptions"),
-    getJson<RelayHubDeliverySummary>("/api/deliveries/summary"),
-    getJson<RelayHubDlqSchedule>("/api/dlq/schedule"),
+    getJson<RelayHubSource[]>(baseUrl, "/api/sources"),
+    getJson<RelayHubTarget[]>(baseUrl, "/api/targets"),
+    getJson<RelayHubSubscription[]>(baseUrl, "/api/subscriptions"),
+    getJson<RelayHubDeliverySummary>(baseUrl, "/api/deliveries/summary"),
+    getJson<RelayHubDlqSchedule>(baseUrl, "/api/dlq/schedule"),
   ]);
 
   return {
@@ -123,10 +127,11 @@ export async function fetchTopology(): Promise<{
 }
 
 export function openLiveActivityStream(
+  baseUrl: string,
   onEvent: (event: RelayHubLiveEvent) => void,
   onConnectionChange: (connected: boolean) => void,
 ): () => void {
-  const source = new EventSource(`${RELAYHUB_JAVA_BASE_URL}/api/live/stream`);
+  const source = new EventSource(`${baseUrl}/api/live/stream`);
   source.onopen = () => onConnectionChange(true);
   source.onerror = () => onConnectionChange(false);
   source.addEventListener("activity", (e) => {

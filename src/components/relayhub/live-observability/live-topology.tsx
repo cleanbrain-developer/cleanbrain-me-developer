@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityDetailSheet } from "@/components/relayhub/live-observability/activity-detail-sheet";
+import type { LiveService } from "@/content/live-services";
 import {
   fetchDeliverySummary,
   fetchDlqSchedule,
@@ -140,7 +141,8 @@ function readyDelay(map: Map<string, number>, key: string, now: number): number 
   return busyUntil !== undefined ? Math.max(0, busyUntil - now) : 0;
 }
 
-export function LiveTopology() {
+export function LiveTopology({ service }: { service: LiveService }) {
+  const baseUrl = service.baseUrl;
   const [sources, setSources] = useState<RelayHubSource[]>([]);
   const [targets, setTargets] = useState<RelayHubTarget[]>([]);
   const [subscriptions, setSubscriptions] = useState<RelayHubSubscription[]>([]);
@@ -206,7 +208,7 @@ export function LiveTopology() {
   }
 
   useEffect(() => {
-    fetchTopology()
+    fetchTopology(baseUrl)
       .then((topo) => {
         setSources(topo.sources);
         setTargets(topo.targets);
@@ -214,8 +216,8 @@ export function LiveTopology() {
         setSummary(topo.summary);
         setDlqNextRunAt(new Date(topo.dlqSchedule.nextRunAt).getTime());
       })
-      .catch(() => setLoadError("Couldn't load relayhub-java's topology (sources/targets/subscriptions)."));
-  }, []);
+      .catch(() => setLoadError(`Couldn't load ${service.name}'s topology (sources/targets/subscriptions).`));
+  }, [baseUrl, service.name]);
 
   /**
    * Re-fetch the DLQ count and next-sweep time shortly after anything that
@@ -227,10 +229,10 @@ export function LiveTopology() {
   function scheduleSummaryRefetch() {
     if (summaryRefetchTimer.current !== null) window.clearTimeout(summaryRefetchTimer.current);
     summaryRefetchTimer.current = window.setTimeout(() => {
-      fetchDeliverySummary()
+      fetchDeliverySummary(baseUrl)
         .then((s) => setSummary(s))
         .catch(() => {});
-      fetchDlqSchedule()
+      fetchDlqSchedule(baseUrl)
         .then((schedule) => setDlqNextRunAt(new Date(schedule.nextRunAt).getTime()))
         .catch(() => {});
     }, 600);
@@ -244,7 +246,7 @@ export function LiveTopology() {
       if (secondsLeft === 0 && !resyncScheduledRef.current) {
         resyncScheduledRef.current = true;
         window.setTimeout(() => {
-          fetchDlqSchedule()
+          fetchDlqSchedule(baseUrl)
             .then((schedule) => setDlqNextRunAt(new Date(schedule.nextRunAt).getTime()))
             .catch(() => {})
             .finally(() => {
@@ -254,7 +256,7 @@ export function LiveTopology() {
       }
     }, 1000);
     return () => window.clearInterval(tick);
-  }, [dlqNextRunAt]);
+  }, [dlqNextRunAt, baseUrl]);
 
   const sourcePositions = useMemo(() => {
     const positions = layout(sources.length, NODE_X_SOURCE);
@@ -323,6 +325,7 @@ export function LiveTopology() {
 
   useEffect(() => {
     return openLiveActivityStream(
+      baseUrl,
       (event) => {
         setFeed((prev) => [event, ...prev].slice(0, 15));
 
@@ -382,12 +385,12 @@ export function LiveTopology() {
       setConnected,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sourcePositions, eventPositions, targetPositions, hub, dlqPos]);
+  }, [baseUrl, sourcePositions, eventPositions, targetPositions, hub, dlqPos]);
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6 sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="live-title text-xl font-bold sm:text-2xl">relayhub-java — Live Activity</h2>
+        <h2 className="live-title text-xl font-bold sm:text-2xl">{service.name} — Live Activity</h2>
         <span
           className={`rounded-full border px-2 py-0.5 font-mono text-xs ${
             connected
@@ -710,7 +713,7 @@ export function LiveTopology() {
         </div>
       </div>
 
-      <ActivityDetailSheet event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+      <ActivityDetailSheet event={selectedEvent} baseUrl={baseUrl} onClose={() => setSelectedEvent(null)} />
     </div>
   );
 }

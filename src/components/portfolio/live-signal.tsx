@@ -4,11 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardLabel, CardValue } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { liveServices } from "@/content/live-services";
 import {
   fetchRelayHubLiveObservability,
   type RelayHubLiveObservability,
 } from "@/lib/relayhub/live-observability";
 import { fetchTopology, openLiveActivityStream, type RelayHubLiveEvent } from "@/lib/relayhub/live-topology";
+
+// Always the flagship entry in the registry (src/content/live-services.ts),
+// not a configurable prop — this is the home page's single "is this real?"
+// proof, not a per-service view (that's /lab/[slug]).
+const flagship = liveServices[0];
 
 const FLASH_MS = 700;
 
@@ -29,10 +35,10 @@ export function LiveSignal() {
   const flashTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    fetchRelayHubLiveObservability()
+    fetchRelayHubLiveObservability(flagship.baseUrl)
       .then(setData)
       .catch(() => {});
-    fetchTopology()
+    fetchTopology(flagship.baseUrl)
       .then((topo) =>
         setNodes({
           sources: topo.sources.map((s) => s.key).slice(0, 2),
@@ -44,6 +50,7 @@ export function LiveSignal() {
 
   useEffect(() => {
     return openLiveActivityStream(
+      flagship.baseUrl,
       (event) => {
         setFlash(event.stage);
         if (flashTimer.current !== null) window.clearTimeout(flashTimer.current);
@@ -56,7 +63,7 @@ export function LiveSignal() {
   return (
     <div className="rounded-xl border border-border bg-surface p-6 sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="font-mono text-sm font-semibold text-foreground">RelayHub</p>
+        <p className="font-mono text-sm font-semibold text-foreground">{flagship.name}</p>
         <Badge tone={connected ? "live" : "default"}>{connected ? "● LIVE" : "connecting…"}</Badge>
       </div>
 

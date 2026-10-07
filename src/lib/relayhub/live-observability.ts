@@ -1,5 +1,3 @@
-const RELAYHUB_JAVA_BASE_URL = "https://relayhub-java.developer.cleanbrain.me";
-
 export interface RelayHubLiveSummary {
   succeeded: number;
   pending: number;
@@ -61,15 +59,16 @@ export function parseRangeSeries(
   }));
 }
 
-async function queryInstant(query: string): Promise<number> {
+async function queryInstant(baseUrl: string, query: string): Promise<number> {
   const response = await fetch(
-    `${RELAYHUB_JAVA_BASE_URL}/api/metrics/query?query=${encodeURIComponent(query)}`,
+    `${baseUrl}/api/metrics/query?query=${encodeURIComponent(query)}`,
   );
   if (!response.ok) throw new Error(`Prometheus instant query failed: ${response.status}`);
   return parseInstantValue((await response.json()) as PrometheusInstantResult);
 }
 
 async function queryRange(
+  baseUrl: string,
   query: string,
   rangeMinutes: number,
   stepSeconds: number,
@@ -83,7 +82,7 @@ async function queryRange(
     end: String(end),
     step: String(stepSeconds),
   });
-  const response = await fetch(`${RELAYHUB_JAVA_BASE_URL}/api/metrics/query_range?${params}`);
+  const response = await fetch(`${baseUrl}/api/metrics/query_range?${params}`);
   if (!response.ok) throw new Error(`Prometheus range query failed: ${response.status}`);
   return parseRangeSeries((await response.json()) as PrometheusRangeResult, seriesLabel);
 }
@@ -95,20 +94,23 @@ async function queryRange(
  * is no mock/adapter layer for this data: it is a one-way, real-time view of a real system, not
  * a simulation (see ADR-0005 for why the earlier interactive Mock Lab was removed).
  */
-export async function fetchRelayHubLiveObservability(): Promise<RelayHubLiveObservability> {
+export async function fetchRelayHubLiveObservability(
+  baseUrl: string,
+): Promise<RelayHubLiveObservability> {
   const [summary, targets, ingressEventsPerMinute, ingressSeries, deliveryAttemptSeries] =
     await Promise.all([
-      fetch(`${RELAYHUB_JAVA_BASE_URL}/api/deliveries/summary`).then((res) => {
+      fetch(`${baseUrl}/api/deliveries/summary`).then((res) => {
         if (!res.ok) throw new Error(`Failed to load delivery summary: ${res.status}`);
         return res.json() as Promise<RelayHubLiveSummary>;
       }),
-      fetch(`${RELAYHUB_JAVA_BASE_URL}/api/targets`).then((res) => {
+      fetch(`${baseUrl}/api/targets`).then((res) => {
         if (!res.ok) throw new Error(`Failed to load targets: ${res.status}`);
         return res.json() as Promise<RelayHubLiveTarget[]>;
       }),
-      queryInstant("sum(rate(relayhub_ingress_events_total[5m]))*60"),
-      queryRange("sum(rate(relayhub_ingress_events_total[5m]))*60", 30, 60, () => "events/min"),
+      queryInstant(baseUrl, "sum(rate(relayhub_ingress_events_total[5m]))*60"),
+      queryRange(baseUrl, "sum(rate(relayhub_ingress_events_total[5m]))*60", 30, 60, () => "events/min"),
       queryRange(
+        baseUrl,
         "sum by (status) (rate(relayhub_delivery_attempts_total[5m]) * 60)",
         30,
         60,

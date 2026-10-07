@@ -2,7 +2,7 @@
 
 ## Architectural style
 
-developer.cleanbrain.me is a Next.js (App Router, TypeScript) application. Server Components are the default; Client Components are used only where interactivity is required — `/lab/relayhub` (the full RelayHub console) and `LiveSignal`, a smaller live component embedded directly on `/`, the site's front door itself since ADR-0006 (`/` is real static content, not a redirect). There is no database and no custom backend server, and — since ADR-0005 — no mock/simulation layer either: both `/lab/relayhub` and `LiveSignal` read relayhub-java's real production telemetry directly, including a live SSE stream (ADR-0004's "Update"). The `RelayHubAdapter`/`MockRelayHubAdapter`/`HttpRelayHubAdapter` interfaces from ADR-0002 (Phase 3–4 of the original build) were removed entirely — see ADR-0005 for why.
+developer.cleanbrain.me is a Next.js (App Router, TypeScript) application. Server Components are the default; Client Components are used only where interactivity is required — `/lab/[slug]` (the full console for one Live system) and `LiveSignal`, a smaller live component embedded directly on `/`, the site's front door itself since ADR-0006 (`/` is real static content, not a redirect). There is no database and no custom backend server, and — since ADR-0005 — no mock/simulation layer either: `/lab/[slug]` and `LiveSignal` both read real production telemetry directly, including a live SSE stream (ADR-0004's "Update"). The `RelayHubAdapter`/`MockRelayHubAdapter`/`HttpRelayHubAdapter` interfaces from ADR-0002 (Phase 3–4 of the original build) were removed entirely — see ADR-0005 for why.
 
 ```text
 src/content/*.ts (profile, experience, projects, case studies)
@@ -17,8 +17,8 @@ LiveTopology (Client Component)         LiveDashboard (Client Component)
     ↓ EventSource (SSE)                     ↓ fetch (poll every 10s)
     ↓ + one-time fetch                      ↓
 src/lib/relayhub/live-topology.ts       src/lib/relayhub/live-observability.ts
-    ↓                                       ↓
-relayhub-java's public REST + SSE endpoints (real, cross-origin, both)
+    ↓ (baseUrl from src/content/live-services.ts)
+A registered Live service's public REST + SSE endpoints (real, cross-origin, both)
 ```
 
 ## Layers
@@ -27,16 +27,20 @@ relayhub-java's public REST + SSE endpoints (real, cross-origin, both)
 
 `src/content/` holds structured TypeScript modules (`profile.ts`, `experience.ts`, `projects.ts`, `case-studies/*.ts`) that are the single source of portfolio content. Presentation components read from these modules; they never define project or case-study text inline.
 
+### Live Systems registry
+
+`src/content/live-services.ts` is the single source of truth for every Live system this site shows real data from — `LiveService { slug, name, language, baseUrl, description, status }`. One entry today (`relayhub`, Java, `status: "live"`). Per `cleanbrain-me-infra`'s README, RelayHub is planned to scale out to language siblings (`relayhub-<lang>`) — separately deployed instances of the same API contract, not different products — so a future sibling is just a new registry entry with its own slug, never a rename of an existing one. `/lab` (`src/app/lab/page.tsx`) renders a grid of `LiveServiceCard`s (`src/components/lab/`, deliberately not under `relayhub/` since this layer is generic) over the registry; `/lab/[slug]` (`generateStaticParams` over `liveServices`, same pattern as `/projects/[slug]`/`/case-studies/[slug]`) renders one service's full console. See ADR-0006's "Update (2026-10-07)" for the full reasoning.
+
 ### RelayHub Live
 
-`src/lib/relayhub/` is the only RelayHub-related domain code left, and it is two independent, real (not mocked) integrations, not one:
+`src/lib/relayhub/` is the only RelayHub-related domain code left, and it is two independent, real (not mocked) integrations, not one — both parameterized by a `baseUrl` (from the registry above) rather than a hardcoded hostname:
 
-- `live-topology.ts` + `live-topology.tsx`: the primary, attention-grabbing view. Opens a real cross-origin `EventSource` against `relayhub-java`'s `/api/live/stream` and renders an animated Source → Event → RelayHub → Target diagram (pulses, impact explosions, node-hit shake) — a port of that repo's own admin-console Live page (`frontend/src/pages/LivePage.tsx`), recolored to this site's theme. Also fetches `/api/sources`, `/api/subscriptions`, `/api/dlq/schedule` once on mount to lay out the diagram and drive the DLQ countdown. See ADR-0004's "Update (2026-09-13)". Its Recent Activity table's `"delivery"`-stage rows are clickable, opening `activity-detail-sheet.tsx` (a `Sheet`, see "UI primitives" below) via `fetchDeliveryAttempt()`/`fetchDeliveryAttempts()` — real request/response/error detail and retry history for that specific attempt. See ADR-0004's "Update (2026-09-29)" and `docs/relayhub-observability-gap.md` for what this deliberately does not show.
-- `live-observability.ts` + `live-dashboard.tsx`: a secondary "Aggregate stats" section below the topology. Polls `relayhub-java`'s delivery-summary and Prometheus-backed metrics endpoints every 10 seconds, rendering KPI tiles and `Sparkline` (`sparkline.tsx`, a small dependency-free inline-SVG line chart — no charting library). `parseInstantValue`/`parseRangeSeries` are pure, unit-tested functions that reshape Prometheus's JSON response shapes into this app's types.
+- `live-topology.ts` + `live-topology.tsx` (`LiveTopology`, takes a `service: LiveService` prop): the primary, attention-grabbing view. Opens a real cross-origin `EventSource` against `${service.baseUrl}/api/live/stream` and renders an animated Source → Event → RelayHub → Target diagram (pulses, impact explosions, node-hit shake) — a port of relayhub-java's own admin-console Live page (`frontend/src/pages/LivePage.tsx`), recolored to this site's theme. Also fetches `/api/sources`, `/api/subscriptions`, `/api/dlq/schedule` once on mount to lay out the diagram and drive the DLQ countdown. See ADR-0004's "Update (2026-09-13)". Its Recent Activity table's `"delivery"`-stage rows are clickable, opening `activity-detail-sheet.tsx` (a `Sheet`, see "UI primitives" below) via `fetchDeliveryAttempt()`/`fetchDeliveryAttempts()` — real request/response/error detail and retry history for that specific attempt. See ADR-0004's "Update (2026-09-29)" and `docs/relayhub-observability-gap.md` for what this deliberately does not show.
+- `live-observability.ts` + `live-dashboard.tsx` (`LiveDashboard`, same `service` prop): a secondary "Aggregate stats" section below the topology. Polls `${service.baseUrl}`'s delivery-summary and Prometheus-backed metrics endpoints every 10 seconds, rendering KPI tiles and `Sparkline` (`sparkline.tsx`, a small dependency-free inline-SVG line chart — no charting library). `parseInstantValue`/`parseRangeSeries` are pure, unit-tested functions that reshape Prometheus's JSON response shapes into this app's types.
 
 There is no adapter interface and no mock implementation for either: both are one-way, read-only views of a real system, not a simulated pipeline with interchangeable backends (see ADR-0005 for why the earlier `RelayHubAdapter`/`MockRelayHubAdapter` was removed).
 
-A third, independent consumer lives on `/`: `src/components/portfolio/live-signal.tsx` reuses `live-observability.ts`'s `fetchRelayHubLiveObservability()` and `live-topology.ts`'s `fetchTopology()`/`openLiveActivityStream()` for its numbers, connection status, and real node names, but deliberately does not reuse `live-topology.tsx`'s stateful pulse/explosion animation engine (see ADR-0006's "Alternatives considered").
+A third, independent consumer lives on `/`: `src/components/portfolio/live-signal.tsx` reuses `live-observability.ts`'s `fetchRelayHubLiveObservability()` and `live-topology.ts`'s `fetchTopology()`/`openLiveActivityStream()` (always against `liveServices[0].baseUrl`, the flagship entry — not configurable) for its numbers, connection status, and real node names, but deliberately does not reuse `live-topology.tsx`'s stateful pulse/explosion animation engine (see ADR-0006's "Alternatives considered"). `LiveServiceCard`'s `LivePulse` (`src/components/lab/live-pulse.tsx`) follows the same independence: a small, purely decorative, non-data-driven animation, not a fourth consumer of the pulse engine.
 
 ### UI primitives
 

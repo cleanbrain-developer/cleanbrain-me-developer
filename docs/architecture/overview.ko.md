@@ -4,7 +4,7 @@
 
 ## Architectural style
 
-developer.cleanbrain.me는 Next.js (App Router, TypeScript) 애플리케이션입니다. Server Component가 기본이며, Client Component는 interactivity가 필요한 곳에서만 사용됩니다 — `/lab/relayhub`(full RelayHub console)와, ADR-0006 이후 사이트의 front door 자체인 `/`에 직접 embed된 더 작은 live component `LiveSignal`(`/`는 이제 redirect가 아니라 real한 static 콘텐츠입니다). database도, custom backend server도 없으며 — ADR-0005 이후로는 — mock/simulation layer도 없습니다: `/lab/relayhub`와 `LiveSignal` 둘 다 relayhub-java의 실제 production telemetry를 직접 읽으며, 여기에는 live SSE stream(ADR-0004의 "Update")도 포함됩니다. ADR-0002(원래 build의 Phase 3–4)에서 나온 `RelayHubAdapter`/`MockRelayHubAdapter`/`HttpRelayHubAdapter` interface들은 완전히 제거되었습니다 — 이유는 ADR-0005 참고.
+developer.cleanbrain.me는 Next.js (App Router, TypeScript) 애플리케이션입니다. Server Component가 기본이며, Client Component는 interactivity가 필요한 곳에서만 사용됩니다 — `/lab/[slug]`(하나의 Live system에 대한 full console)와, ADR-0006 이후 사이트의 front door 자체인 `/`에 직접 embed된 더 작은 live component `LiveSignal`(`/`는 이제 redirect가 아니라 real한 static 콘텐츠입니다). database도, custom backend server도 없으며 — ADR-0005 이후로는 — mock/simulation layer도 없습니다: `/lab/[slug]`와 `LiveSignal` 둘 다 real한 production telemetry를 직접 읽으며, 여기에는 live SSE stream(ADR-0004의 "Update")도 포함됩니다. ADR-0002(원래 build의 Phase 3–4)에서 나온 `RelayHubAdapter`/`MockRelayHubAdapter`/`HttpRelayHubAdapter` interface들은 완전히 제거되었습니다 — 이유는 ADR-0005 참고.
 
 ```text
 src/content/*.ts (profile, experience, projects, case studies)
@@ -19,8 +19,8 @@ LiveTopology (Client Component)         LiveDashboard (Client Component)
     ↓ EventSource (SSE)                     ↓ fetch (poll every 10s)
     ↓ + one-time fetch                      ↓
 src/lib/relayhub/live-topology.ts       src/lib/relayhub/live-observability.ts
-    ↓                                       ↓
-relayhub-java's public REST + SSE endpoints (real, cross-origin, both)
+    ↓ (baseUrl from src/content/live-services.ts)
+registry에 등록된 한 Live service의 public REST + SSE endpoint (둘 다 real, cross-origin)
 ```
 
 ## Layers (계층)
@@ -29,16 +29,20 @@ relayhub-java's public REST + SSE endpoints (real, cross-origin, both)
 
 `src/content/`에는 포트폴리오 콘텐츠의 단일 source인 구조화된 TypeScript module(`profile.ts`, `experience.ts`, `projects.ts`, `case-studies/*.ts`)이 있습니다. Presentation component는 이 module들을 읽으며, 프로젝트나 case-study 텍스트를 inline으로 정의하지 않습니다.
 
+### Live Systems registry
+
+`src/content/live-services.ts`는 이 사이트가 real한 데이터를 보여주는 모든 Live system의 단일 source of truth입니다 — `LiveService { slug, name, language, baseUrl, description, status }`. 오늘은 entry 하나(`relayhub`, Java, `status: "live"`). `cleanbrain-me-infra`의 README에 따르면 RelayHub는 language sibling(`relayhub-<lang>`)으로 scale out될 계획입니다 — 같은 API contract의 별도로 배포된 instance이지, 다른 product가 아닙니다 — 그래서 미래의 sibling은 자기 자신의 slug를 가진 새 registry entry일 뿐, 기존 entry의 rename이 절대 아닙니다. `/lab`(`src/app/lab/page.tsx`)은 registry에 대해 `LiveServiceCard`(`src/components/lab/`, 이 layer가 generic이기 때문에 의도적으로 `relayhub/` 아래에 두지 않음)의 grid를 렌더링합니다; `/lab/[slug]`(`liveServices`에 대한 `generateStaticParams`, `/projects/[slug]`/`/case-studies/[slug]`와 같은 패턴)는 하나의 service에 대한 full console을 렌더링합니다. 전체 논리는 ADR-0006의 "Update (2026-10-07)" 참고.
+
 ### RelayHub Live
 
-`src/lib/relayhub/`는 남아 있는 유일한 RelayHub 관련 domain code이며, 하나가 아니라 두 개의 독립적인 real(mock이 아닌) 통합입니다.
+`src/lib/relayhub/`는 남아 있는 유일한 RelayHub 관련 domain code이며, 하나가 아니라 두 개의 독립적인 real(mock이 아닌) 통합입니다 — 둘 다 하드코딩된 hostname이 아니라 (위 registry에서 온) `baseUrl`로 parameterize되어 있습니다.
 
-- `live-topology.ts` + `live-topology.tsx`: 눈길을 끄는 주요 view입니다. `relayhub-java`의 `/api/live/stream`에 대해 실제 cross-origin `EventSource`를 열고 애니메이션이 적용된 Source → Event → RelayHub → Target diagram(pulse, impact explosion, node-hit shake)을 렌더링합니다 — 해당 repo 자체 admin-console의 Live 페이지(`frontend/src/pages/LivePage.tsx`)를 이 사이트의 테마로 재색상화하여 이식(port)한 것입니다. 또한 diagram을 배치하고 DLQ countdown을 구동하기 위해 mount 시 한 번 `/api/sources`, `/api/subscriptions`, `/api/dlq/schedule`을 fetch합니다. ADR-0004의 "Update (2026-09-13)" 참고. Recent Activity table의 `"delivery"` stage row는 클릭 가능하며, `activity-detail-sheet.tsx`(`Sheet`, 아래 "UI primitives" 참고)를 `fetchDeliveryAttempt()`/`fetchDeliveryAttempts()`를 통해 연다 — 해당 attempt의 real한 request/response/error 상세와 재시도 이력이다. ADR-0004의 "Update (2026-09-29)"와 `docs/relayhub-observability-gap.md`(이게 의도적으로 보여주지 않는 것) 참고.
-- `live-observability.ts` + `live-dashboard.tsx`: topology 아래의 보조 "Aggregate stats" section입니다. `relayhub-java`의 delivery-summary와 Prometheus 기반 metrics endpoint를 10초마다 polling하여 KPI tile과 `Sparkline`(`sparkline.tsx`, 별도 의존성 없이 inline-SVG로 만든 작은 line chart — charting library 미사용)을 렌더링합니다. `parseInstantValue`/`parseRangeSeries`는 Prometheus의 JSON response 형태를 이 앱의 type으로 재구성하는 순수하고 unit-test된 함수입니다.
+- `live-topology.ts` + `live-topology.tsx`(`LiveTopology`, `service: LiveService` prop을 받음): 눈길을 끄는 주요 view입니다. `${service.baseUrl}/api/live/stream`에 대해 실제 cross-origin `EventSource`를 열고 애니메이션이 적용된 Source → Event → RelayHub → Target diagram(pulse, impact explosion, node-hit shake)을 렌더링합니다 — relayhub-java 자체 admin-console의 Live 페이지(`frontend/src/pages/LivePage.tsx`)를 이 사이트의 테마로 재색상화하여 이식(port)한 것입니다. 또한 diagram을 배치하고 DLQ countdown을 구동하기 위해 mount 시 한 번 `/api/sources`, `/api/subscriptions`, `/api/dlq/schedule`을 fetch합니다. ADR-0004의 "Update (2026-09-13)" 참고. Recent Activity table의 `"delivery"` stage row는 클릭 가능하며, `activity-detail-sheet.tsx`(`Sheet`, 아래 "UI primitives" 참고)를 `fetchDeliveryAttempt()`/`fetchDeliveryAttempts()`를 통해 연다 — 해당 attempt의 real한 request/response/error 상세와 재시도 이력이다. ADR-0004의 "Update (2026-09-29)"와 `docs/relayhub-observability-gap.md`(이게 의도적으로 보여주지 않는 것) 참고.
+- `live-observability.ts` + `live-dashboard.tsx`(`LiveDashboard`, 같은 `service` prop): topology 아래의 보조 "Aggregate stats" section입니다. `${service.baseUrl}`의 delivery-summary와 Prometheus 기반 metrics endpoint를 10초마다 polling하여 KPI tile과 `Sparkline`(`sparkline.tsx`, 별도 의존성 없이 inline-SVG로 만든 작은 line chart — charting library 미사용)을 렌더링합니다. `parseInstantValue`/`parseRangeSeries`는 Prometheus의 JSON response 형태를 이 앱의 type으로 재구성하는 순수하고 unit-test된 함수입니다.
 
 둘 다 adapter interface나 mock 구현이 없습니다 — 둘 다 상호교환 가능한 backend를 가진 시뮬레이션 파이프라인이 아니라, real system에 대한 단방향 read-only view입니다(이전의 `RelayHubAdapter`/`MockRelayHubAdapter`가 제거된 이유는 ADR-0005 참고).
 
-`/`에는 세 번째의 독립적인 consumer가 있습니다: `src/components/portfolio/live-signal.tsx`는 숫자·연결 상태·real node 이름을 위해 `live-observability.ts`의 `fetchRelayHubLiveObservability()`와 `live-topology.ts`의 `fetchTopology()`/`openLiveActivityStream()`을 재사용하지만, `live-topology.tsx`의 stateful pulse/explosion 애니메이션 엔진은 의도적으로 재사용하지 않습니다(ADR-0006의 "Alternatives considered" 참고).
+`/`에는 세 번째의 독립적인 consumer가 있습니다: `src/components/portfolio/live-signal.tsx`는 숫자·연결 상태·real node 이름을 위해 `live-observability.ts`의 `fetchRelayHubLiveObservability()`와 `live-topology.ts`의 `fetchTopology()`/`openLiveActivityStream()`을 재사용하지만(항상 `liveServices[0].baseUrl`, flagship entry에 대해서만 — 설정 불가), `live-topology.tsx`의 stateful pulse/explosion 애니메이션 엔진은 의도적으로 재사용하지 않습니다(ADR-0006의 "Alternatives considered" 참고). `LiveServiceCard`의 `LivePulse`(`src/components/lab/live-pulse.tsx`)도 같은 독립성을 따릅니다: 작고 순수하게 장식적이며 data-driven이 아닌 애니메이션으로, pulse engine의 네 번째 consumer가 아닙니다.
 
 ### UI primitives
 
